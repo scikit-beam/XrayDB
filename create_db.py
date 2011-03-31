@@ -167,7 +167,7 @@ def create_database(source, dest, overwrite=False):
 
 if __name__ == '__main__':
     try:
-        import argparser
+        import argparse
     except ImportError:
         raise RuntimeError(
             'argparse module not found.\n'
