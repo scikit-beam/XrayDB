@@ -12,12 +12,16 @@ import sqlite3
 import sys
 
 
-def create_database(source, dest, overwrite=False):
+def create_database(source, dest, overwrite=False, silent=False):
     if not os.path.isfile(source):
+        if silent:
+            return
         raise IOError('File "%s" does not exist' % source)
     if os.path.isfile(dest) and overwrite:
         os.remove(dest)
     if os.path.exists(dest):
+        if silent:
+            return
         raise IOError('File "%s" already exists. Use "-f" to overwrite' % dest)
 
     with io.open(source, encoding='ascii') as f:
@@ -179,6 +183,9 @@ if __name__ == '__main__':
     parser.add_argument('source')
     parser.add_argument('dest')
     parser.add_argument('-f', '--force', action='store_true')
+    parser.add_argument('-s', '--silent', action='store_true')
     args = parser.parse_args()
 
-    create_database(args.source, args.dest, overwrite=args.force)
+    create_database(
+        args.source, args.dest, overwrite=args.force, silent=args.silent
+        )
