@@ -10,7 +10,50 @@ import json
 import os
 import sqlite3
 import sys
+from string import maketrans
 
+def add_f0Waasmaier(dest, append=True):
+    source = 'waasmaier.dat'
+    source = 'f0_WaasKirf.dat'
+
+    if os.path.exists(dest) and not append:
+        raise IOError('File "%s" already exists -- cannot add f0 data')
+
+    conn = sqlite3.connect(dest)
+    c = conn.cursor()
+    c.execute(
+        '''create table f0Waasmaier (id integer,
+        atomic_number integer, element text, ion text,
+        offset real, scale text, exponents text)
+        ''')
+    
+    f = open(source)
+    lines = f.readlines()
+    if 'Elastic Photon-Atom Scatt' not in lines[1]:
+        raise RuntimeError('Source file not recognized for f0_WaasKirf data')
+
+    strip_ion = maketrans('0123456789+-', ' '*12)
+    id = 0
+    while lines:
+        line = lines.pop(0)        
+        if line.startswith('#S '):
+            id += 1
+            #print [s for s in line[3:].split()]
+            zstr, ion = [s.strip() for s in line[3:].split()]
+            atno = int(zstr)
+            for i in range(3):
+                line = lines.pop(0)
+            words = [float(w.strip()) for w in line.split()]
+            off   = words[5]
+            scale = json.dumps(words[:5])
+            expon = json.dumps(words[6:])
+
+            elem = ion.translate(strip_ion).strip()
+            c.execute('insert into f0Waasmaier values (?,?,?,?,?,?,?)',
+                      (id, atno, elem, ion, off, scale, expon))
+
+    conn.commit()
+    c.close()
 
 def create_database(source, dest, overwrite=False, silent=False):
     if not os.path.isfile(source):
@@ -189,3 +232,5 @@ if __name__ == '__main__':
     create_database(
         args.source, args.dest, overwrite=args.force, silent=args.silent
         )
+
+    add_f0Waasmaier(args.dest, append=True)
