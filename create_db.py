@@ -14,7 +14,7 @@ from string import maketrans
 
 
     
-def add_f0Waasmaier(dest, append=True):
+def add_Waasmaier(dest, append=True):
     """add f0 data from Waasmaier and Kirfel"""
     source = 'f0_WaasKirf.dat'
 
@@ -24,7 +24,7 @@ def add_f0Waasmaier(dest, append=True):
     conn = sqlite3.connect(dest)
     c = conn.cursor()
     c.execute(
-        '''create table f0Waasmaier (id integer,
+        '''create table Waasmaier (id integer,
         atomic_number integer, element text, ion text,
         offset real, scale text, exponents text)
         ''')
@@ -51,7 +51,7 @@ def add_f0Waasmaier(dest, append=True):
             expon = json.dumps(words[6:])
 
             elem = ion.translate(strip_ion).strip()
-            c.execute('insert into f0Waasmaier values (?,?,?,?,?,?,?)',
+            c.execute('insert into Waasmaier values (?,?,?,?,?,?,?)',
                       (id, atno, elem, ion, off, scale, expon))
 
     conn.commit()
@@ -67,7 +67,7 @@ def add_chantler(dest, append=True):
     conn = sqlite3.connect(dest)
     c = conn.cursor()
     c.execute(
-        '''create table chantler (id integer,
+        '''create table Chantler (id integer,
         element text, sigma_mu real, mue_f2 real, density real,
         energy text, f1 text, f2 text, mu_photo text,
         mu_incoh text, mu_total text)
@@ -107,7 +107,7 @@ def add_chantler(dest, append=True):
             mu_incoh.append(words[4])
             mu_total.append(words[5])
 
-        c.execute('insert into chantler values %s' % args,
+        c.execute('insert into Chantler values %s' % args,
                   (z, elem, sigma_mu, mue_f2, density,
                    json.dumps(en), json.dumps(f1), json.dumps(f2), 
                    json.dumps(mu_photo), json.dumps(mu_incoh), 
@@ -294,5 +294,5 @@ if __name__ == '__main__':
         args.source, args.dest, overwrite=args.force, silent=args.silent
         )
 
-    add_f0Waasmaier(args.dest, append=True)
+    add_Waasmaier(args.dest, append=True)
     add_chantler(args.dest, append=True)
