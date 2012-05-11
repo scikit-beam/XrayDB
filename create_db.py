@@ -12,8 +12,10 @@ import sqlite3
 import sys
 from string import maketrans
 
+
+    
 def add_f0Waasmaier(dest, append=True):
-    source = 'waasmaier.dat'
+    """add f0 data from Waasmaier and Kirfel"""
     source = 'f0_WaasKirf.dat'
 
     if os.path.exists(dest) and not append:
@@ -52,6 +54,65 @@ def add_f0Waasmaier(dest, append=True):
             c.execute('insert into f0Waasmaier values (?,?,?,?,?,?,?)',
                       (id, atno, elem, ion, off, scale, expon))
 
+    conn.commit()
+    c.close()
+
+
+def add_chantler(dest, append=True):
+    """add f' / f'' data from Chantler"""
+
+    if os.path.exists(dest) and not append:
+        raise IOError('File "%s" already exists -- cannot add f0 data')
+
+    conn = sqlite3.connect(dest)
+    c = conn.cursor()
+    c.execute(
+        '''create table chantler (id integer,
+        element text, sigma_mu real, mue_f2 real, density real,
+        energy text, f1 text, f2 text, mu_photo text,
+        mu_incoh text, mu_total text)
+        ''')
+
+    dirname = 'chantler'
+    args = '(%s)' % ','.join(['?']*11)
+    
+    nelem = 92
+    for z in range(1, nelem+1):
+        fname = os.path.join(dirname, '%2.2i.dat' % z)
+        lines = open(fname, 'r').readlines()
+
+        # line 1: take symbol and density only
+        words = lines[0][1:-1].split()
+        words.pop()
+        density = float(words.pop())
+        elem = words[0].replace(':','')
+        
+        # line 2: take sigma_mu
+        words = lines[1][1:-1].split()
+        sigma_mu = float(words.pop())
+        
+        # line 3: take mue_f2
+        words = lines[2][1:-1].split()
+        mue_f2 = float(words.pop())
+
+        en, f1, f2, mu_photo, mu_incoh, mu_total = [], [], [], [], [], []
+        for line in lines:
+            if line.startswith('#'):
+                continue
+            words = [float(w) for w in line[:-1].split()]
+            en.append(words[0])
+            f1.append(words[1]  - z)
+            f2.append(words[2])
+            mu_photo.append(words[3])
+            mu_incoh.append(words[4])
+            mu_total.append(words[5])
+
+        c.execute('insert into chantler values %s' % args,
+                  (z, elem, sigma_mu, mue_f2, density,
+                   json.dumps(en), json.dumps(f1), json.dumps(f2), 
+                   json.dumps(mu_photo), json.dumps(mu_incoh), 
+                   json.dumps(mu_total)))
+        
     conn.commit()
     c.close()
 
@@ -234,3 +295,4 @@ if __name__ == '__main__':
         )
 
     add_f0Waasmaier(args.dest, append=True)
+    add_chantler(args.dest, append=True)
