@@ -7,9 +7,8 @@ Main Class for full Database:  XrayDB
 
 import os
 import json
-import epics
+import numpy as np
 import time
-import socket
 
 from sqlalchemy import MetaData, and_, create_engine, \
      Table, Column, Integer, Float, String, Text, DateTime, ForeignKey
@@ -22,19 +21,21 @@ from sqlalchemy.pool import SingletonThreadPool
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
-def make_engine(dbname, server):
+def make_engine(dbname):
     return create_engine('sqlite:///%s' % (dbname),
                          poolclass=SingletonThreadPool)
 
-def isXrayDB(dbname, server='sqlite'):
+def isxrayDB(dbname):
     """test if a file is a valid scan database:
     must be a sqlite db file, with tables named
-       'postioners', 'detectors', and 'scans'
+    'Coster_Kronig', 'elements', 'photoabsorption', 'scattering'
+
     """
-    _tables = ('Coster_Kronig', 'elements', 'photoabsorption', 'scattering')
+    _tables = ('Chantler', 'Waasmaier', 'Coster_Kronig', 'elements',
+               'photoabsorption', 'scattering')
     result = False
     try:
-        engine = make_engine(dbname, server)
+        engine = make_engine(dbname)
         meta = MetaData(engine)
         meta.reflect()
         result = all([t in meta.tables for t in _tables])
@@ -48,18 +49,6 @@ def json_encode(val):
         return val
     return  json.dumps(val)
 
-def None_or_one(val, msg='Expected 1 or None result'):
-    """expect result (as from query.all() to return
-    either None or exactly one result
-    """
-    if len(val) == 1:
-        return val[0]
-    elif len(val) == 0:
-        return None
-    else:
-        raise DBException(msg)
-
-
 class DBException(Exception):
     """DB Access Exception: General Errors"""
     def __init__(self, msg):
@@ -68,73 +57,13 @@ class DBException(Exception):
     def __str__(self):
         return self.msg
 
-def StrCol(name, size=None, **kws):
-    val = Text
-    if size is not None: val = String(size)
-    return Column(name, val, **kws)
-
-def FloatCol(name, **kws):
-    return Column(name, Float, **kws)
-
-def NamedTable(tablename, metadata, keyid='id',
-               nameid='element', name=True, cols=None):
-    args  = [Column(keyid, Integer, primary_key=True)]
-    if name:
-        args.append(StrCol(nameid, size=16, nullable=False, unique=True))
-    if cols is not None:
-        args.extend(cols)
-    return Table(tablename, metadata, *args)
-
-
-def create_newdb(dbname, server='sqlite'):
-    engine  = make_engine(dbname, server)
-    metadata =  MetaData(engine)
-    # print dbname, engine, metadataa
-    ck = NamedTable('Coster_Kroning', metadata,
-                    cols=[StrCol('initial_level'),
-                          StrCol('final_level'),
-                          FloatCol('transition_probability'),
-                          FloatCold('total_transition_probability')])
-
-    el = NamedTable('elements', metadata, keyid='atomic_number',
-                    cols=[FloatCol('molar_mass'), FloatCol('density')])
-
-    pa = NamedTable('photoabsorption', metadata,
-                    cols=[StrCol('log_energy'), StrCol('log_photoabsorption'),
-                          StrCol('log_photoabsorption_spline')])
-
-    sc = NamedTable('scattering', metadata,
-                    cols=[StrCol('log_energy'),
-                          StrCol('log_coherent_scatter'),
-                          StrCol('log_coherent_scatter_spline'),
-                          StrCol('log_incoherent_scatter'),
-                          StrCol('log_incoherent_scatter_spline')])
-
-    xl = NamedTable('xray_levels', metadata,
-                    cols=[StrCol('iupac_symbol'),
-                          FloatCol('absorption_edge'),
-                          FloatCol('fluorescence_yield'),
-                          FloatCol('jump_ratio')])
-    xt = NamedTable('xray_transitions', metadata,
-                    cols=[StrCol('iupac_symbol'),
-                          StrCol('siegbahn_symbol'),
-                          StrCol('initial_level'),
-                          StrCol('final_level'),
-                          FloatCol('emission_energy'),
-                          FloatCol('intensity')])
-
-
-    metadata.create_all()
-    session = sessionmaker(bind=engine)()
-    session.commit()
-
 class _BaseTable(object):
     "generic class to encapsulate SQLAlchemy table"
     def __repr__(self):
         el = getattr(self, 'element', '??')
         return "<%s(%s)>" % (self.__class__.__name__, el)
 
-class CKTable(_BaseTable):
+class CosterKronigTable(_BaseTable):
     "positioners table"
     (id, element, initial_level, final_level,
      transition_probability, total_transition_probability) = [None]*6
@@ -143,67 +72,66 @@ class ElementsTable(_BaseTable):
     (atomic_number, element, molar_mass, density) = [None]*4
 
 class PhotoAbsorptionTable(_BaseTable):
-    (id, element, log_energy, 
+    (id, element, log_energy,
      log_photoabsorption, log_photoabsorption_spline) = [None]*5
 
 class ScatteringTable(_BaseTable):
-    (id, element, log_energy, 
+    (id, element, log_energy,
      log_coherent_scatter, log_coherent_scatter_spline,
      log_incoherent_scatter, log_incoherent_scatter_spline) = [None]*7
-    
+
 class XrayLevelsTable(_BaseTable):
     (id, element,  iupac_symbol,
      absorption_edge, fluorescence_yield, jump_ratio) = [None]*6
-    
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge= getattr(self, 'iupac_symbol', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
+
 class XrayTransitionsTable(_BaseTable):
     (id, element, iupac_symbol, siegbahn_symbol, initial_level,
      final_level, emission_energy, intensity) = [None]*8
 
 class WaasmaierTable(_BaseTable):
     (id, atomic_number, element, ion, offset, scale, exponents) = [None]*7
-    
+    def __repr__(self):
+        el = getattr(self, 'ion', '??')
+        return "<%s(%s)>" % (self.__class__.__name__, el)
+
 class ChantlerTable(_BaseTable):
     (id, element, sigma_mu, mue_f2, density,
      energy, f1, f2, mu_photo, mu_incoh, mu_total) = [None]*11
 
 class xrayDB(object):
     "interface to Xray Data"
-    def __init__(self, server='sqlite', dbname=None):
-        self.dbname = dbname
-        self.server = server
-        self.tables = None
-        self.engine = None
-        self.session = None
-        self.conn    = None
-        self.metadata = None
-        self.pvs = {}
-        self.restoring_pvs = []
-        if dbname is not None or server=='mysql':
-            self.connect(dbname, server=server)
-
-    def connect(self, dbname, server='sqlite'):
+    def __init__(self, dbname='xrayref.db'):
         "connect to an existing database"
-        if server == 'sqlite':
-            if not os.path.exists(dbname):
-                raise IOError("Database '%s' not found!" % dbname)
+        if not os.path.exists(dbname):
+            raise IOError("Database '%s' not found!" % dbname)
 
-            if not isXrayDB(dbname):
-                raise ValueError("'%s' is not an Xray Database file!" % dbname)
+        if not isxrayDB(dbname):
+            raise ValueError("'%s' is not a valid X-ray Database file!" % dbname)
 
         self.dbname = dbname
-        self.engine = make_engine(dbname, server)
+        self.engine = make_engine(dbname)
         self.conn = self.engine.connect()
         self.session = sessionmaker(bind=self.engine)()
         self.metadata =  MetaData(self.engine)
         self.metadata.reflect()
         tables = self.tables = self.metadata.tables
-
         try:
             clear_mappers()
         except:
             pass
-        mapper(ChantlerTable,      tables['Chantler'])
-        mapper(WaasmaierTable,     tables['Waasmaier'])
+        mapper(ChantlerTable,        tables['Chantler'])
+        mapper(WaasmaierTable,       tables['Waasmaier'])
+        mapper(CosterKronigTable,    tables['Coster_Kronig'])
+        mapper(ElementsTable,        tables['elements'])
+        mapper(PhotoAbsorptionTable, tables['photoabsorption'])
+        mapper(ScatteringTable,      tables['scattering'])
+        mapper(XrayLevelsTable,      tables['xray_levels'])
+        mapper(XrayTransitionsTable, tables['xray_transitions'])
 
     def close(self):
         "close session"
@@ -214,30 +142,170 @@ class xrayDB(object):
         "generic query"
         return self.session.query(*args, **kws)
 
-    def _get_foreign_keyid(self, table, value, name='name',
-                           keyid='id', default=None):
-        """generalized lookup for foreign key arguments
-    table: a valid table class, as mapped by mapper.
-    value: can be one of the following
-         table instance:  keyid is returned
-         string:          'name' attribute (or set which attribute with 'name' arg)
-            a valid id
-            """
-        if isinstance(value, table):
-            return getattr(table, keyid)
-        else:
-            if isinstance(value, (str, unicode)):
-                xfilter = getattr(table, name)
-            elif isinstance(value, int):
-                xfilter = getattr(table, keyid)
+    def f0_ions(self, element=None):
+        """return list of ion names supported for the .f0() calculation
+        from Waasmaier and Kirfel
+
+        if element is None, all 211 ions are returned.
+
+        If element is not None, the ions for that element (atomic symbol) are returned
+        """
+        rows = self.query(WaasmaierTable)
+        if element is not None:
+            if isinstance(element, int):
+                rows = rows.filter(WaasmaierTable.atomic_number==element)
             else:
-                return default
-            try:
-                query = self.query(table).filter(
-                    xfilter==value)
-                return getattr(query.one(), keyid)
-            except (IntegrityError, NoResultFound):
-                return default
+                rows = rows.filter(WaasmaierTable.element==element.title())
+        return [str(r.ion) for r in rows.all()]
 
-        return default
+    def f0(self, q, ion):
+        """Calculate f0(q) -- elastic x-ray scattering factor
+        from Waasmaier and Kirfel
 
+        arguments
+        ---------
+        q: single q value, list, tuple, or numpy array of q value
+             q = sin(theta) / lambda
+             theta = incident angle, lambda = x-ray wavelength
+
+        ion:  atomic number, atomic symbol or ionic symbol
+              (case insensitive) of scatterer
+
+        Z values from 1 to 98 (and symbols 'H' to 'Cf') are supported.
+        The list of ionic symbols can be read with the function .f0_ions()
+        """
+        tab = WaasmaierTable
+        row = self.query(tab)
+        if isinstance(ion, int):
+            row = row.filter(tab.atomic_number==ion).all()
+        else:
+            row = row.filter(tab.ion==ion.title()).all()
+        if len(row) > 0:
+            row = row[0]
+        if isinstance(row, tab):
+            if isinstance(q, (tuple, list)):
+                q = np.array(q)
+            f0 = row.offset
+            for s, e in zip(json.loads(row.scale), json.loads(row.exponents)):
+                f0 += s * np.exp(-e*q*q)
+            return f0
+
+    def _getChantler(self, energy, element, column='f1'):
+        """return energy-dependent data from Chantler table
+        columns: f1, f2, mu_photo, mu_incoh, mu_total
+        """
+        tab = ChantlerTable
+        row = self.query(tab)
+        if isinstance(element, int):
+            row = row.filter(tab.id==element).all()
+        else:
+            row = row.filter(tab.element==element.title()).all()
+        if len(row) > 0:
+            row = row[0]
+        if isinstance(row, tab):
+            if isinstance(energy, (tuple, list)):
+                energy = np.array(energy)
+            if column == 'mu':
+                column = 'mu_total'
+            if hasattr(row, column):
+                return np.interp(energy, np.array(json.loads(row.energy)),
+                                 np.array(json.loads(getattr(row, column))))
+
+    def f1(self, energy, element):
+        """returns f1 -- real part of anomalous x-ray scattering factor
+        for selected input energy (or energies) in eV.
+        """
+        return self._getChantler(energy, element, column='f1')
+
+    def f2(self, energy, element):
+        """returns f2 -- imaginary part of anomalous x-ray scattering factor
+        for selected input energy (or energies) in eV.
+        """
+        return self._getChantler(energy, element, column='f2')
+
+    def mu(self, energy, element, incoh=False, photo=False):
+        """returns mu/rho in cm^2/gr -- x-ray mass attenuation coefficient
+        for selected input energy (or energies) in eV.
+        default is to return total attenuation coefficient.
+        use
+          photo=True to return only the photo-electric contribution or
+          incoh=True to return on the incoherent contribution
+        """
+        col = 'mu_total'
+        if incoh:
+            col = 'mu_incoh'
+        elif photo:
+            col = 'mu_photo'
+        return self._getChantler(energy, element, column=col)
+
+    def _getElementData(self, element):
+        "get data from elements table"
+        tab = ElementsTable
+        row = self.query(tab)
+        if isinstance(element, int):
+            row = row.filter(tab.atomic_number==element).all()
+        else:
+            row = row.filter(tab.element==element.title()).all()
+        if len(row) > 0: row = row[0]
+        return row
+
+    def zofsym(self, element):
+        "return z for element name"
+        return int(self._getElementData(element).atomic_number)
+
+    def symbol(self, z):
+        "return element symbol from z"
+        return self._getElementData(z).element
+
+    def molar_mass(self, element):
+        "return molar mass of element"
+        return self._getElementData(element).molar_mass
+
+    def density(self, element):
+        "return density of pure element"
+        return self._getElementData(element).density
+
+
+    def xray_edges(self, element):
+        """returns dictionary of all x-ray absorption edge energy (in eV), fluorescence yield, and jump ratio
+        for an element dictionary has keys of edge (iupac symol), each containing a tuple of
+               (energy, fluorescence_yield, edge_jump)
+        """
+        if isinstance(element, int):
+            element = self.symbol(element)
+        tab = XrayLevelsTable
+        out = {}
+        for r in self.query(tab).filter(tab.element==element.title()).all():
+            out[str(r.iupac_symbol)] = (r.absorption_edge,
+                                        r.fluorescence_yield,
+                                        r.jump_ratio)
+        return out
+
+    def xray_edge(self, element, edge):
+        """returns tuple of
+               (energy, fluorescence_yield, edge_jump)
+        for an x-ray absorption edge
+        """
+        edges = self.xray_edges(element)
+        if edge in edges:
+            return edges[edge]
+
+    def xray_lines(self, element): # iupac=None, siegbahn=None,   excitation_energy=None):
+        """returns x-ray emission line energy (in eV), line intensity, iupac symbol,
+           siegbahn symbol, initial level and final level
+        for an element
+        """
+        if isinstance(element, int):
+            element = self.symbol(element)
+        tab = XrayTransitionsTable
+#         if iupac is not None:
+#             row = row.filter(tab.iupac_symbol==iupac)
+#         if siegbahn is not None:
+#             row = row.filter(tab.siegbahn_symbol==siegbahn)
+        out = {}
+        for r in self.query(tab).filter(tab.element==element.title()).all():
+            out[str(r.siegbahn_symbol)] = (r.emission_energy,
+                                        r.intensity,
+                                        r.initial_level,
+                                        r.final_level, r.iupac_symbol)
+        return out
