@@ -13,10 +13,9 @@ import sys
 from string import maketrans
 
 
-    
 def add_Waasmaier(dest, append=True):
     """add f0 data from Waasmaier and Kirfel"""
-    source = 'f0_WaasKirf.dat'
+    source = 'waasmaeir_kirfel.dat'
 
     if os.path.exists(dest) and not append:
         raise IOError('File "%s" already exists -- cannot add f0 data')
@@ -24,11 +23,11 @@ def add_Waasmaier(dest, append=True):
     conn = sqlite3.connect(dest)
     c = conn.cursor()
     c.execute(
-        '''create table Waasmaier (id integer,
+        '''create table Waasmaier (id integer primary key,
         atomic_number integer, element text, ion text,
         offset real, scale text, exponents text)
         ''')
-    
+
     f = open(source)
     lines = f.readlines()
     if 'Elastic Photon-Atom Scatt' not in lines[1]:
@@ -37,7 +36,7 @@ def add_Waasmaier(dest, append=True):
     strip_ion = maketrans('0123456789+-', ' '*12)
     id = 0
     while lines:
-        line = lines.pop(0)        
+        line = lines.pop(0)
         if line.startswith('#S '):
             id += 1
             #print [s for s in line[3:].split()]
@@ -51,15 +50,19 @@ def add_Waasmaier(dest, append=True):
             expon = json.dumps(words[6:])
 
             elem = ion.translate(strip_ion).strip()
+            for suffix in (('va', 'val')):
+                if elem.endswith(suffix):
+                    elem = elem[:-len(suffix)]
+
             c.execute('insert into Waasmaier values (?,?,?,?,?,?,?)',
                       (id, atno, elem, ion, off, scale, expon))
 
     conn.commit()
     c.close()
 
-
-def add_chantler(dest, append=True):
-    """add f' / f'' data from Chantler"""
+def add_Chantler(dest, append=True):
+    """add f' / f'', mu data from Chantler"""
+    dirname = 'chantler'
 
     if os.path.exists(dest) and not append:
         raise IOError('File "%s" already exists -- cannot add f0 data')
@@ -67,15 +70,14 @@ def add_chantler(dest, append=True):
     conn = sqlite3.connect(dest)
     c = conn.cursor()
     c.execute(
-        '''create table Chantler (id integer,
+        '''create table Chantler (id integer primary key,
         element text, sigma_mu real, mue_f2 real, density real,
         energy text, f1 text, f2 text, mu_photo text,
         mu_incoh text, mu_total text)
         ''')
 
-    dirname = 'chantler'
     args = '(%s)' % ','.join(['?']*11)
-    
+
     nelem = 92
     for z in range(1, nelem+1):
         fname = os.path.join(dirname, '%2.2i.dat' % z)
@@ -86,11 +88,11 @@ def add_chantler(dest, append=True):
         words.pop()
         density = float(words.pop())
         elem = words[0].replace(':','')
-        
+
         # line 2: take sigma_mu
         words = lines[1][1:-1].split()
         sigma_mu = float(words.pop())
-        
+
         # line 3: take mue_f2
         words = lines[2][1:-1].split()
         mue_f2 = float(words.pop())
@@ -100,7 +102,7 @@ def add_chantler(dest, append=True):
             if line.startswith('#'):
                 continue
             words = [float(w) for w in line[:-1].split()]
-            en.append(words[0])
+            en.append(1000.0*words[0])
             f1.append(words[1]  - z)
             f2.append(words[2])
             mu_photo.append(words[3])
@@ -109,14 +111,15 @@ def add_chantler(dest, append=True):
 
         c.execute('insert into Chantler values %s' % args,
                   (z, elem, sigma_mu, mue_f2, density,
-                   json.dumps(en), json.dumps(f1), json.dumps(f2), 
-                   json.dumps(mu_photo), json.dumps(mu_incoh), 
+                   json.dumps(en), json.dumps(f1), json.dumps(f2),
+                   json.dumps(mu_photo), json.dumps(mu_incoh),
                    json.dumps(mu_total)))
-        
+
     conn.commit()
     c.close()
 
-def create_database(source, dest, overwrite=False, silent=False):
+def add_Elam(dest, overwrite=False, silent=False):
+    source = 'elam.dat'
     if not os.path.isfile(source):
         if silent:
             return
@@ -139,40 +142,42 @@ def create_database(source, dest, overwrite=False, silent=False):
     c = conn.cursor()
 
     c.execute(
-        '''create table elements (atomic_number integer, element text,
-        molar_mass real, density real)
+        '''create table elements (atomic_number integer primary key,
+        element text, molar_mass real, density real)
         '''
         )
     current_edge_id = 0
     c.execute(
-        '''create table xray_levels (id integer, element text, iupac_symbol
-        text, absorption_edge real, fluorescence_yield real, jump_ratio real)
+        '''create table xray_levels (id integer primary key, element text,
+        iupac_symbol text, absorption_edge real, fluorescence_yield real,
+        jump_ratio real)
         '''
         )
     current_line_id = 0
     c.execute(
-        '''create table xray_transitions (id integer, element text,
+        '''create table xray_transitions (id integer primary key, element text,
         iupac_symbol text, siegbahn_symbol text, initial_level text,
         final_level text, emission_energy real, intensity real)
         '''
         )
     current_ck_id = 0
     c.execute(
-        '''create table Coster_Kronig
-        (id integer, element text, initial_level text, final_level text,
+        '''create table Coster_Kronig (id integer primary key, element text,
+        initial_level text, final_level text,
         transition_probability real, total_transition_probability real)
         '''
         )
     current_photo_id = 0
     c.execute(
-        '''create table photoabsorption (id integer, element text,
+        '''create table photoabsorption (id integer primary key, element text,
         log_energy text, log_photoabsorption text,
         log_photoabsorption_spline text)
         '''
         )
     current_scatter_id = 0
     c.execute(
-        '''create table scattering (id integer, element text, log_energy text,
+        '''create table scattering (id integer primary key, element text,
+        log_energy text,
         log_coherent_scatter text, log_coherent_scatter_spline text,
         log_incoherent_scatter text, log_incoherent_scatter_spline text)
         '''
@@ -269,9 +274,7 @@ def create_database(source, dest, overwrite=False, silent=False):
                 )
 
     conn.commit()
-
     c.close()
-
 
 if __name__ == '__main__':
     try:
@@ -282,17 +285,13 @@ if __name__ == '__main__':
             'Install argparse or update to python-2.7 or >=python-3.2.'
             )
     parser = argparse.ArgumentParser(
-        description='export the Elam ascii file to an SQLite database "dest"'
+        description='export the Elam, Waasmaier, Chantler data to an SQLite database "dest"'
         )
-    parser.add_argument('source')
-    parser.add_argument('dest')
+    dest = 'xrayref.db'
     parser.add_argument('-f', '--force', action='store_true')
     parser.add_argument('-s', '--silent', action='store_true')
     args = parser.parse_args()
 
-    create_database(
-        args.source, args.dest, overwrite=args.force, silent=args.silent
-        )
-
-    add_Waasmaier(args.dest, append=True)
-    add_chantler(args.dest, append=True)
+    add_Elam(dest, overwrite=args.force, silent=args.silent)
+    add_Waasmaier(dest, append=True)
+    add_Chantler(dest, append=True)
