@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 """
-SQLAlchemy wrapping of x-ray database for Elam and Chantler data
+SQLAlchemy wrapping of x-ray database for data from
+     Elam et al, Chantler et al, Waasmaier and Kirfel
 
-Main Class for full Database:  XrayDB
+Main Class for full Database:  xrayDB
 """
 
 import os
+import time
 import json
 import numpy as np
-import time
 
-from sqlalchemy import MetaData, and_, create_engine, \
-     Table, Column, Integer, Float, String, Text, DateTime, ForeignKey
-
-from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers, relationship
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.exc import  NoResultFound
+from sqlalchemy import MetaData, create_engine
+from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers
 from sqlalchemy.pool import SingletonThreadPool
 
 # needed for py2exe?
@@ -64,7 +61,6 @@ class _BaseTable(object):
         return "<%s(%s)>" % (self.__class__.__name__, el)
 
 class CosterKronigTable(_BaseTable):
-    "positioners table"
     (id, element, initial_level, final_level,
      transition_probability, total_transition_probability) = [None]*6
 
@@ -92,6 +88,10 @@ class XrayLevelsTable(_BaseTable):
 class XrayTransitionsTable(_BaseTable):
     (id, element, iupac_symbol, siegbahn_symbol, initial_level,
      final_level, emission_energy, intensity) = [None]*8
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        line = getattr(self, 'siegbahn_symbol', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, line)
 
 class WaasmaierTable(_BaseTable):
     (id, atomic_number, element, ion, offset, scale, exponents) = [None]*7
@@ -126,12 +126,14 @@ class xrayDB(object):
             pass
         mapper(ChantlerTable,        tables['Chantler'])
         mapper(WaasmaierTable,       tables['Waasmaier'])
-        mapper(CosterKronigTable,    tables['Coster_Kronig'])
         mapper(ElementsTable,        tables['elements'])
-        mapper(PhotoAbsorptionTable, tables['photoabsorption'])
-        mapper(ScatteringTable,      tables['scattering'])
         mapper(XrayLevelsTable,      tables['xray_levels'])
         mapper(XrayTransitionsTable, tables['xray_transitions'])
+        mapper(CosterKronigTable,    tables['Coster_Kronig'])
+        mapper(PhotoAbsorptionTable, tables['photoabsorption'])
+        mapper(ScatteringTable,      tables['scattering'])
+
+
 
     def close(self):
         "close session"
@@ -265,7 +267,6 @@ class xrayDB(object):
         "return density of pure element"
         return self._getElementData(element).density
 
-
     def xray_edges(self, element):
         """returns dictionary of all x-ray absorption edge energy (in eV), fluorescence yield, and jump ratio
         for an element dictionary has keys of edge (iupac symol), each containing a tuple of
@@ -282,30 +283,63 @@ class xrayDB(object):
         return out
 
     def xray_edge(self, element, edge):
-        """returns tuple of
-               (energy, fluorescence_yield, edge_jump)
+        """returns tuple of (energy, fluorescence_yield, edge_jump)
         for an x-ray absorption edge
         """
         edges = self.xray_edges(element)
         if edge in edges:
             return edges[edge]
 
-    def xray_lines(self, element): # iupac=None, siegbahn=None,   excitation_energy=None):
-        """returns x-ray emission line energy (in eV), line intensity, iupac symbol,
-           siegbahn symbol, initial level and final level
-        for an element
+    def xray_lines(self, element, initial_level=None, excitation_energy=None):
+        """returns dictionary of x-ray emission lines of an element, with
+         key = siegbahn symbol (Ka1, Lb1, etc)  and
+         value = (energy (in eV), intensity, initial_level, final_level)
+
+        options:
+         initial_level:     limit output to an initial level(s) -- a string or list of strings
+         excitation_energy: limit output to those excited by given energy (in eV)
+
+        Note that excitation energy will overwrite initial_level
         """
         if isinstance(element, int):
             element = self.symbol(element)
         tab = XrayTransitionsTable
-#         if iupac is not None:
-#             row = row.filter(tab.iupac_symbol==iupac)
-#         if siegbahn is not None:
-#             row = row.filter(tab.siegbahn_symbol==siegbahn)
+        row = self.query(tab).filter(tab.element==element.title())
+        if excitation_energy is not None:
+            initial_level = []
+            for ilevel, dat in self.xray_edges(element).items():
+                if dat[0] < excitation_energy:
+                    initial_level.append(ilevel.title())
+
+        if initial_level is not None:
+            if isinstance(initial_level, (list, tuple)):
+                row = row.filter(tab.initial_level.in_(initial_level))
+            else:
+                row = row.filter(tab.initial_level==initial_level.title())
         out = {}
-        for r in self.query(tab).filter(tab.element==element.title()).all():
-            out[str(r.siegbahn_symbol)] = (r.emission_energy,
-                                        r.intensity,
-                                        r.initial_level,
-                                        r.final_level, r.iupac_symbol)
+        for r in row.all():
+            out[str(r.siegbahn_symbol)] = (r.emission_energy, r.intensity,
+                                           r.initial_level, r.final_level)
         return out
+
+    def CK_probability(self, element, initial, final, total=True):
+        """return transition probability for an element and initial/final levels
+        """
+
+        if isinstance(element, int):
+            element = self.symbol(element)
+        tab = CosterKronigTable
+        row = self.query(tab).filter(
+            tab.element==element.title()
+            ).filter(
+            tab.initial_level==initial.title()
+            ).filter(
+            tab.final_level==final.title()).all()
+        if len(row) > 0:
+            row = row[0]
+        if isinstance(row, tab):
+            if total:
+                return row.total_transition_probability
+            else:
+                return row.transition_probability
+
