@@ -12,7 +12,6 @@ import sqlite3
 import sys
 from string import maketrans
 
-
 def add_Waasmaier(dest, append=True):
     """add f0 data from Waasmaier and Kirfel"""
     source = 'waasmaeir_kirfel.dat'
@@ -72,11 +71,12 @@ def add_Chantler(dest, append=True):
     c.execute(
         '''create table Chantler (id integer primary key,
         element text, sigma_mu real, mue_f2 real, density real,
+        corr_henke float, corr_cl35 float, corr_nucl float,
         energy text, f1 text, f2 text, mu_photo text,
         mu_incoh text, mu_total text)
         ''')
 
-    args = '(%s)' % ','.join(['?']*11)
+    args = '(%s)' % ','.join(['?']*14)
 
     nelem = 92
     for z in range(1, nelem+1):
@@ -98,12 +98,22 @@ def add_Chantler(dest, append=True):
         mue_f2 = float(words.pop())
 
         en, f1, f2, mu_photo, mu_incoh, mu_total = [], [], [], [], [], []
+        corr_henke, corr_cl35, corr_nucl = 0, 0, 0
         for line in lines:
             if line.startswith('#'):
+                if 'Relativistic' in line or 'Nuclear Thomson' in line:
+                    line = line[1:-1].replace('#', ' ').strip()
+                    label, val = line.split('=')
+                    val = val.replace(',', '').replace('e/atom', '')
+                    if 'Relativistic' in line:
+                        corr_henke, corr_cl35 = [float(x) for x in val.split()]
+                    else:
+                        corr_nucl = float(val)
                 continue
+
             words = [float(w) for w in line[:-1].split()]
             en.append(1000.0*words[0])
-            f1.append(words[1]  - z)
+            f1.append(words[1]  - z + corr_cl35 + corr_nucl)
             f2.append(words[2])
             mu_photo.append(words[3])
             mu_incoh.append(words[4])
@@ -111,6 +121,7 @@ def add_Chantler(dest, append=True):
 
         c.execute('insert into Chantler values %s' % args,
                   (z, elem, sigma_mu, mue_f2, density,
+                   corr_henke, corr_cl35, corr_nucl,
                    json.dumps(en), json.dumps(f1), json.dumps(f2),
                    json.dumps(mu_photo), json.dumps(mu_incoh),
                    json.dumps(mu_total)))
