@@ -84,7 +84,6 @@ class XrayLevelsTable(_BaseTable):
         edge= getattr(self, 'iupac_symbol', '??')
         return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
 
-
 class XrayTransitionsTable(_BaseTable):
     (id, element, iupac_symbol, siegbahn_symbol, initial_level,
      final_level, emission_energy, intensity) = [None]*8
@@ -101,7 +100,8 @@ class WaasmaierTable(_BaseTable):
 
 class ChantlerTable(_BaseTable):
     (id, element, sigma_mu, mue_f2, density,
-     energy, f1, f2, mu_photo, mu_incoh, mu_total) = [None]*11
+     corr_henke, corr_cl35, corr_nucl,
+     energy, f1, f2, mu_photo, mu_incoh, mu_total) = [None]*14
 
 class xrayDB(object):
     "interface to Xray Data"
@@ -205,13 +205,23 @@ class xrayDB(object):
         if len(row) > 0:
             row = row[0]
         if isinstance(row, tab):
-            if isinstance(energy, (tuple, list)):
-                energy = np.array(energy)
+            energy = np.array(energy)
+            emin, emax = min(energy), max(energy)
+            te = np.array(json.loads(row.energy))
+            nemin = max(0, -2 + max(np.where(te<=emin)[0]))
+            nemax = min(len(te), 6 + max(np.where(te<=emax)[0]))
+            region = np.arange(nemin, nemax)
+            te = te[region]
+
             if column == 'mu':
                 column = 'mu_total'
-            if hasattr(row, column):
-                return np.interp(energy, np.array(json.loads(row.energy)),
-                                 np.array(json.loads(getattr(row, column))))
+            ty = np.array(json.loads(getattr(row, column)))[region]
+            if column == 'f1':
+                return np.interp(energy, te, ty)
+            else:
+                return np.exp(np.interp(np.log(energy),
+                                        np.log(te),
+                                        np.log(ty)))
 
     def f1(self, energy, element):
         """returns f1 -- real part of anomalous x-ray scattering factor
@@ -233,11 +243,11 @@ class xrayDB(object):
           photo=True to return only the photo-electric contribution or
           incoh=True to return on the incoherent contribution
         """
-        col = 'mu_total'
-        if incoh:
+        col = 'mu_photo'
+        if icoh == photo:
+            col = 'mu_total'
+        elif incoh:
             col = 'mu_incoh'
-        elif photo:
-            col = 'mu_photo'
         return self._getChantler(energy, element, column=col)
 
     def _getElementData(self, element):
@@ -325,7 +335,6 @@ class xrayDB(object):
     def CK_probability(self, element, initial, final, total=True):
         """return transition probability for an element and initial/final levels
         """
-
         if isinstance(element, int):
             element = self.symbol(element)
         tab = CosterKronigTable
@@ -342,4 +351,5 @@ class xrayDB(object):
                 return row.total_transition_probability
             else:
                 return row.transition_probability
+
 
