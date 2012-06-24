@@ -12,6 +12,39 @@ import sqlite3
 import sys
 from string import maketrans
 
+def add_KeskiRahkonen_Krause(dest, append=True):
+    """add core-widths from Keski-Rahkonen and Krause. Data from
+    Atomic Data and Nuclear Data Tables, Vol 14, Number 2, 1974,
+
+    Note that the data in Corehole_Widths.dat was generated using
+    xraydb -- so this data one was bootstrapped...
+    """
+    source = 'keskirahkonen_krause.dat'
+    if os.path.exists(dest) and not append:
+        raise IOError('File "%s" already exists -- cannot add core hole data')
+
+    conn = sqlite3.connect(dest)
+    c = conn.cursor()
+    c.execute(
+        '''create table KeskiRahkonen_Krause (id integer primary key,
+        atomic_number integer, element text, edge text, width float)''')
+
+    f = open(source)
+    lines = f.readlines()
+    id = 0
+    for line in lines:
+        if line.startswith('#'):
+            continue
+        atno, elem, edge, width = line[:-1].split()
+        id +=1
+        atno, width = int(atno), float(width)
+        c.execute('insert into KeskiRahkonen_Krause values (?,?,?,?,?)',
+                      (id, atno, elem, edge, width))
+
+    conn.commit()
+    c.close()
+
+
 def add_Waasmaier(dest, append=True):
     """add f0 data from Waasmaier and Kirfel"""
     source = 'waasmaeir_kirfel.dat'
@@ -305,4 +338,5 @@ if __name__ == '__main__':
 
     add_Elam(dest, overwrite=args.force, silent=args.silent)
     add_Waasmaier(dest, append=True)
+    add_KeskiRahkonen_Krause(dest, append=True)
     add_Chantler(dest, append=True)

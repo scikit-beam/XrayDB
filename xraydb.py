@@ -10,7 +10,7 @@ import os
 import time
 import json
 import numpy as np
-
+from scipy.interpolate import interp1d, splrep, splev, UnivariateSpline
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers
 from sqlalchemy.pool import SingletonThreadPool
@@ -28,8 +28,9 @@ def isxrayDB(dbname):
     'Coster_Kronig', 'elements', 'photoabsorption', 'scattering'
 
     """
-    _tables = ('Chantler', 'Waasmaier', 'Coster_Kronig', 'elements',
-               'photoabsorption', 'scattering')
+    _tables = ('Chantler', 'Waasmaier', 'Coster_Kronig',
+               'KeskiRahkonen_Krause',
+               'elements', 'photoabsorption', 'scattering')
     result = False
     try:
         engine = make_engine(dbname)
@@ -98,6 +99,13 @@ class WaasmaierTable(_BaseTable):
         el = getattr(self, 'ion', '??')
         return "<%s(%s)>" % (self.__class__.__name__, el)
 
+class KeskiRahkonenKrauseTable(_BaseTable):
+    (id, atomic_number, element, edge, width) = [None]*5
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge = getattr(self, 'edge', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
 class ChantlerTable(_BaseTable):
     (id, element, sigma_mu, mue_f2, density,
      corr_henke, corr_cl35, corr_nucl,
@@ -124,15 +132,15 @@ class xrayDB(object):
             clear_mappers()
         except:
             pass
-        mapper(ChantlerTable,        tables['Chantler'])
-        mapper(WaasmaierTable,       tables['Waasmaier'])
-        mapper(ElementsTable,        tables['elements'])
-        mapper(XrayLevelsTable,      tables['xray_levels'])
-        mapper(XrayTransitionsTable, tables['xray_transitions'])
-        mapper(CosterKronigTable,    tables['Coster_Kronig'])
-        mapper(PhotoAbsorptionTable, tables['photoabsorption'])
-        mapper(ScatteringTable,      tables['scattering'])
-
+        mapper(ChantlerTable,            tables['Chantler'])
+        mapper(WaasmaierTable,           tables['Waasmaier'])
+        mapper(KeskiRahkonenKrauseTable, tables['KeskiRahkonen_Krause'])
+        mapper(ElementsTable,            tables['elements'])
+        mapper(XrayLevelsTable,          tables['xray_levels'])
+        mapper(XrayTransitionsTable,     tables['xray_transitions'])
+        mapper(CosterKronigTable,        tables['Coster_Kronig'])
+        mapper(PhotoAbsorptionTable,     tables['photoabsorption'])
+        mapper(ScatteringTable,          tables['scattering'])
 
 
     def close(self):
@@ -207,21 +215,55 @@ class xrayDB(object):
         if isinstance(row, tab):
             energy = np.array(energy)
             emin, emax = min(energy), max(energy)
+            # te = self.chantler_energies(element, emin=emin, emax=emax)
             te = np.array(json.loads(row.energy))
-            nemin = max(0, -2 + max(np.where(te<=emin)[0]))
+            nemin = max(0, -5 + max(np.where(te<=emin)[0]))
             nemax = min(len(te), 6 + max(np.where(te<=emax)[0]))
             region = np.arange(nemin, nemax)
             te = te[region]
-
             if column == 'mu':
                 column = 'mu_total'
             ty = np.array(json.loads(getattr(row, column)))[region]
             if column == 'f1':
-                return np.interp(energy, te, ty)
+                print energy , te
+                ex = np.interp(energy, te, ty)
+                r1 = UnivariateSpline(energy, ex, s=1)(energy)
+                r2 = UnivariateSpline(te, ty, s=1)(energy)
+                return ex, r2
             else:
                 return np.exp(np.interp(np.log(energy),
                                         np.log(te),
                                         np.log(ty)))
+
+    def chantler_energies(self, element, emin=0, emax=1.e9):
+        """ return energies at which Chantler data is tabulated
+        for a particular element.
+        emin, emax can be used to set bounds
+        """
+        tab = ChantlerTable
+        row = self.query(tab)
+        if isinstance(element, int):
+            row = row.filter(tab.id==element).all()
+        else:
+            row = row.filter(tab.element==element.title()).all()
+        if len(row) > 0:
+            row = row[0]
+        if not isinstance(row, tab):
+            return None
+        te = np.array(json.loads(row.energy))
+        tf1 = np.array(json.loads(row.f1))
+        tf2 = np.array(json.loads(row.f2))
+
+        if emin <= min(te):
+            nemin = 0
+        else:
+            nemin = max(0,  -2 + max(np.where(te<=emin)[0]))
+        if emax > max(te):
+            nemax = len(te)
+        else:
+            nemax = min(len(te), 2 + max(np.where(te<=emax)[0]))
+        region = np.arange(nemin, nemax)
+        return te[region], tf1[region], tf2[region]
 
     def f1(self, energy, element):
         """returns f1 -- real part of anomalous x-ray scattering factor
@@ -291,6 +333,31 @@ class xrayDB(object):
                                         r.fluorescence_yield,
                                         r.jump_ratio)
         return out
+
+    def corehole_width(self, element=None, edge=None):
+        """returns core hole width for an element and edge
+        if element is None, values are returned for all elements
+        if edge is None, values are return for all edges"""
+        tab = KeskiRahkonenKrauseTable
+        rows = self.query(tab)
+        has_elem = element is not None
+        has_edge = edge is not None
+        if has_elem:
+            if isinstance(element, int):
+                rows = rows.filter(tab.atomic_number==element)
+            else:
+                rows = rows.filter(tab.element==element.title())
+        if has_edge:
+            rows = rows.filter(tab.edge==edge)
+        out = rows.all()
+        if len(out) == 1:
+            return(out[0].width)
+        elif has_elem:
+            return [(r.edge, r.width) for r in out]
+        elif has_edge:
+            return [(r.atomic_number, r.width) for r in out]
+        else:
+            return [(r.atomic_number, r.edge, r.width) for r in out]
 
     def xray_edge(self, element, edge):
         """returns tuple of (energy, fluorescence_yield, edge_jump)
