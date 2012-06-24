@@ -1,57 +1,60 @@
-This creates and provides usage for an SQLite3 database of atomic data, characteristic x-ray energies and x-ray cross sections for the elements.  Most of the data is from the compilation of Elam, Ravel, and Sieber.  Also included is the elastic scattering f0(q) data from Waasmaier and Kirfel, and the anomalous x-ray scattering factors (f', f'') and absorption cross-sections, mu, compiled by Chantler et al.
+This creates and provides usage for an SQLite3 database of atomic data, characteristic x-ray energies and x-ray cross sections for the elements.  Most of the data is from the compilation of Elam, Ravel, and Sieber.  Also included in the database are
+  * core-hole widths from Keski-Rahknonen and Krause.
+  * elastic scattering f0(q) data from Waasmaier and Kirfel.
+  * anomalous x-ray scattering factors (f', f'') and absorption cross-sections, mu, compiled by Chantler et al.
 
 Tables:
-   elements 
+   elements
       atomic_number integer
       element text
       molar_mass real
       density real
-    photoabsorption 
-      id integer,
-      element text,
-      log_energy text, 
-      log_photoabsorption text,
-      log_photoabsorption_spline text
-    scattering 
+    photoabsorption
       id integer,
       element text,
       log_energy text,
-      log_coherent_scatter text, 
-      log_coherent_scatter_spline text,
-      log_incoherent_scatter text, 
-      log_incoherent_scatter_spline text
-    xray_levels 
-      id integer, 
-      element text, 
-      iupac_symbol text,
-      absorption_edge real, 
-      fluorescence_yield real, 
-      jump_ratio real
-    xray_transitions 
-      id integer, 
+      log_photoabsorption text,
+      log_photoabsorption_spline text
+    scattering
+      id integer,
       element text,
-      iupac_symbol text, 
+      log_energy text,
+      log_coherent_scatter text,
+      log_coherent_scatter_spline text,
+      log_incoherent_scatter text,
+      log_incoherent_scatter_spline text
+    xray_levels
+      id integer,
+      element text,
+      iupac_symbol text,
+      absorption_edge real,
+      fluorescence_yield real,
+      jump_ratio real
+    xray_transitions
+      id integer,
+      element text,
+      iupac_symbol text,
       siegbahn_symbol text,
       initial_level text,
-      final_level text, 
-      emission_energy real, 
+      final_level text,
+      emission_energy real,
       intensity real
    Coster_Kronig
-      id integer  
+      id integer
       element text
       initial_level text
       final_level text
       transition_probability real
       total_transition_probability real
-   Waasmaier 
+   Waasmaier
       id integer,
-      atomic_number integer, 
-      element text, 
+      atomic_number integer,
+      element text,
       ion text,
-      offset real, 
-      scale text, 
+      offset real,
+      scale text,
       exponents text
-   Chantler 
+   Chantler
       id integer,
       element text
       sigma_mu real
@@ -63,3 +66,9 @@ Tables:
       mu_photo text,
       mu_incoh text
       mu_total text
+    KeskiRahkonen_Krause
+      id integer,
+      atomic_number integer,
+      element text,
+      edge text,
+      width float
