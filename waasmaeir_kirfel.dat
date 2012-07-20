@@ -23,7 +23,7 @@
 #UD          New Analytical Scattering Factor Functions for Free Atoms       
 #UD                    and Ions for Free Atoms and Ions                      
 #UD                       D. Waasmaier & A. Kirfel                           
-#UD                    Acta Cryst. (1995). A51, 416-413                      
+#UD                    Acta Cryst. (1995). A51, 416-431
 #UD                                                                          
 #UD  fo the non-dispersive part of the atomic scattering factor is a	    
 #UD  function of the selected element and of sin(theta)/lambda, where	    
@@ -222,7 +222,7 @@
 #S  22  Ti2+
 #N 11
 #L a1  a2  a3  a4  a5  c  b1  b2  b3  b4  b5
-  7.040119  1.496285  9.657304  0.006534  1.649561  0.150362   0.537072  0.031914  8.0099582 1.800293 24.039482  
+  7.040119  1.496285  9.657304  0.006534  1.649561  0.150362   0.537072  0.031914  8.009958 201.800293 24.039482
 #S  22  Ti3+
 #N 11
 #L a1  a2  a3  a4  a5  c  b1  b2  b3  b4  b5
