@@ -1,0 +1,25 @@
+
+This generates a Periodic Table of X-ray absorption edges and emission lines
+using data from Elam, Ravel, and Sieber, Radiation Physics and Chemistry 63 (2002)
+and a latex source file heavily derived from the periodic tables of the elememts
+by Ivan Griffin in the tikZ example set
+    http://texample.net/tikz/examples/periodic-table-of-chemical-elements/
+
+to generate a large format PDF Periodic Table, use
+
+   make
+
+The Elam, et al data is held in the database file xrayref.db.  The scripy gen_atoms.py
+uses this (and the xraydb.py file) to extract the data and write out latex paragraphs
+for each element.  That is, the file atoms.tex is generated with
+
+   python gen_atoms.py > atoms.tex
+
+while the PDF is generated with
+
+   pdflatex ptable_xray
+
+
+
+Matt Newville, 12-Jan-2013
+
