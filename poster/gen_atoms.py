@@ -23,40 +23,36 @@ elnames = ('', 'hydrogen' , 'helium', 'lithium' , 'beryllium', 'boron' ,
            'dysprosium','holmium' , 'erbium','thulium' ,
            'ytterbium','lutetium' , 'hafnium','tantalum' , 'tungsten',
            'rhenium' , 'osmium','iridium' , 'platinum','gold' ,
-           'mercury','thallium' , 'lead','bismuth' , 'polonium', 'astatine'
-           , 'radon','francium' , 'radium','actinium' ,
+           'mercury','thallium' , 'lead','bismuth' , 'polonium', 'astatine',
+           'radon','francium' , 'radium','actinium' ,
            'thorium','protactinium', 'uranium','neptunium' , 'plutonium',
-           'americium', 'curium', 'berkelium', 'californium',
-           'einsteinium', 'fermium', 'mendelevium',
-           'nobelium', 'lawrencium');
+           'americium', 'curium', 'berkelium', 'californium')
 
 table=r"""\newcommand{\%(texsym)s}{{%%
-  \begin{minipage}{67mm}%%
-  \vspace{1mm}
+\begin{minipage}{67mm}
 
-  {\Huge{\hspace{1mm} {\textbf{%(sym)s}} \hfill \hfil{\textbf{%(iz)s}} \hspace{1mm}}} %%
+\vspace{1mm}
 
-  \vspace{6mm}
+{\Huge{\hspace{1mm} {\textbf{%(sym)s}} \hfill \hfil{\textbf{%(iz)s}} \hspace{1mm}}} %%
 
-  {\Huge{\hfill {\Name{%(name)s}} \hfill}}
+\vspace{6mm}
 
-  \vspace{6mm}
+{\Huge{\hfill {\Name{%(name)s}} \hfill}}
 
-  {\Large{
-  \begin{tabular*}{67mm}%%
-   {@{\hspace{5pt}}{r}@{\extracolsep{\fill}}r@{\extracolsep{\fill}}r}%%
-   %%\multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
-   %%\multicolumn{3}{c}{{\Huge{\BBlue{%(name)s}}} }\\%%
-   %% \multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
-   {\BRed{%(k)s}}  & {\bf{%(ka1)s}} &  {\bf{%(kb1)s}} \\%%
-   {\BBlue{%(l1)s}} & %(lb3)s & %(lb4)s \\%%
-   {\BBlue{%(l2)s}} & %(lb1)s & %(lg1)s \\%%
-   {\BRed{%(l3)s}} & {\bf{%(la1)s}} & {\bf{%(lb2)s}} \\%%
-   {\BBlue{%(m5)s}} & %(ma)s & %(mb)s \\%%
-   \multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
-   \end{tabular*}
-   \vfill}}
-  \end{minipage}}}
+\vspace{6mm}
+
+{\Large{
+\begin{tabular*}{67mm}%%
+{@{\hspace{5pt}}{r}@{\extracolsep{\fill}}r@{\extracolsep{\fill}}r}%%
+{\BRed{%(k)s}}  & {\bf{%(ka1)s}} &  {\bf{%(kb1)s}} \\%%
+{\BBlue{%(l1)s}} & %(lb3)s & %(lb4)s \\%%
+{\BBlue{%(l2)s}} & %(lb1)s & %(lg1)s \\%%
+{\BRed{%(l3)s}} & {\bf{%(la1)s}} & {\bf{%(lb2)s}} \\%%
+{\BBlue{%(m5)s}} & %(ma)s & %(mb)s \\%%
+\multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
+\end{tabular*}
+\vfill}}
+\end{minipage}}}
 """
 
 for iz in range(1, 99):
@@ -83,16 +79,12 @@ for iz in range(1, 99):
     dat['la1'] = extract(lines, 'La1')
     dat['lb2'] = extract(lines, 'Lb2,15')
 
-#     if iz > 70 and iz < 80:
-#         print iz, sym
-#         for k, v in lines.items():
-#             print k, v
     dat['m5'] = extract(edges, 'M5')
     dat['ma'] = extract(lines, 'Ma')
     dat['mb'] = extract(lines, 'Mb')
 
     # print dat.keys()
-    print '%% ', dat['name'].title()
+    print '%% ', dat['name']
     print table % dat
 
 highz  = ((99, 'Es', 'einsteinium'),
@@ -108,27 +100,25 @@ for iz, sym, name in highz:
            'l2' : '', 'lb1': '', 'lg1': '', 'l3' : '', 'la1': '', 'lb2':
            '', 'm5': '', 'ma': '', 'mb': ''}
 
-    print '%% ', dat['name'].title()
+    print '%% ', dat['name']
     print table % dat
 
-legend = {'iz': 'Z', 'sym': 'Symbol', 'name': 'name',
-          'texsym': "ElemKey",
-          'k':   r'$\mathbf{K}$ edge',
-          'ka1': r'$\mathbf{K_{\alpha_1}}$',
-          'kb1': r'$\mathbf{K_{\beta_1}}$',
-          'l1':  r'$\mathrm{L_{\rm I}}$ edge',
-          'lb3': r'$\mathrm{L_{\beta_3}}$',
-          'lb4': r'$\mathrm{L_{\beta_4}}$',
-          'l2':  r'$\mathrm{L_{\rm II}}$ edge',
-          'lb1': r'$\mathrm{L_{\beta_1}}$',
-          'lg1': r'$\mathrm{L_{\gamma_1}}$',
-          'l3':  r'$\mathbf{L_{\rm III}}$ edge',
-          'la1': r'$\mathbf{L_{\alpha_1}}$',
-          'lb2': r'$\mathbf{L_{\beta_2}}$',
-          'm5':  r'$\mathrm{M_{\rm V}}$ edge',
-          'ma':  r'$\mathrm{M_{\alpha}}$',
-          'mb':  r'$\mathrm{M_{\beta}}$'}
-
-
 print '%% Key'
-print table % legend
+print table % {'iz': 'Z', 'sym': 'Symbol', 'name': 'name',
+               'texsym': "ElemKey",
+               'k':   r'$\mathbf{K}$ edge',
+               'ka1': r'$\mathbf{K_{\alpha_1}}$',
+               'kb1': r'$\mathbf{K_{\beta_1}}$',
+               'l1':  r'$\mathrm{L_{\rm I}}$ edge',
+               'lb3': r'$\mathrm{L_{\beta_3}}$',
+               'lb4': r'$\mathrm{L_{\beta_4}}$',
+               'l2':  r'$\mathrm{L_{\rm II}}$ edge',
+               'lb1': r'$\mathrm{L_{\beta_1}}$',
+               'lg1': r'$\mathrm{L_{\gamma_1}}$',
+               'l3':  r'$\mathbf{L_{\rm III}}$ edge',
+               'la1': r'$\mathbf{L_{\alpha_1}}$',
+               'lb2': r'$\mathbf{L_{\beta_2}}$',
+               'm5':  r'$\mathrm{M_{\rm V}}$ edge',
+               'ma':  r'$\mathrm{M_{\alpha}}$',
+               'mb':  r'$\mathrm{M_{\beta}}$'}
+
