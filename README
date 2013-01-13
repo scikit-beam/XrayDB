@@ -1,5 +1,5 @@
 This creates and provides usage for an SQLite3 database of atomic data, characteristic x-ray energies and x-ray cross sections for the elements.  Most of the data is from the compilation of Elam, Ravel, and Sieber.  Also included in the database are
-  * core-hole widths from Keski-Rahknonen and Krause.
+  * core-hole widths from Keski-Rahkonen and Krause.
   * elastic scattering f0(q) data from Waasmaier and Kirfel.
   * anomalous x-ray scattering factors (f', f'') and absorption cross-sections, mu, compiled by Chantler et al.
 
