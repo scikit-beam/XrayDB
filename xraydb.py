@@ -18,6 +18,14 @@ from sqlalchemy.pool import SingletonThreadPool
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
+def as_ndarray(obj):
+    """make sure a float, int, list of floats or ints,
+    or tuple of floats or ints, acts as a numpy array
+    """
+    if isinstance(obj, (float, int)):
+        return np.array([obj])
+    return np.asarray(obj)
+
 def make_engine(dbname):
     return create_engine('sqlite:///%s' % (dbname),
                          poolclass=SingletonThreadPool)
@@ -52,8 +60,7 @@ def elam_spline(xin, yin, yspl_in, x):
     """ interpolate values from Elam photoabsorption and scattering tables,
     according to Elam, Numerical Recipes.  Calc borrowed from D. Dale.
     """
-    if not isinstance(x, np.ndarray):
-        x = np.array([x])
+    x = as_ndarray(x)
     x[np.where(x < min(xin))] =  min(xin)
     x[np.where(x > max(xin))] =  max(xin)
 
@@ -224,8 +231,7 @@ class xrayDB(object):
         if len(row) > 0:
             row = row[0]
         if isinstance(row, tab):
-            if isinstance(q, (tuple, list)):
-                q = np.array(q)
+            q = as_ndarray(q)
             f0 = row.offset
             for s, e in zip(json.loads(row.scale), json.loads(row.exponents)):
                 f0 += s * np.exp(-e*q*q)
@@ -244,10 +250,7 @@ class xrayDB(object):
         if len(row) > 0:
             row = row[0]
         if isinstance(row, tab):
-            if isinstance(energy, (float, int)):
-                energy = np.array([energy])
-            elif not isinstance(energy, np.ndarray):
-                energy = np.array(energy)
+            energy = as_ndarray(energy)
             emin, emax = min(energy), max(energy)
             # te = self.chantler_energies(element, emin=emin, emax=emax)
             te = np.array(json.loads(row.energy))
@@ -259,11 +262,14 @@ class xrayDB(object):
                 column = 'mu_total'
             ty = np.array(json.loads(getattr(row, column)))[region]
             if column == 'f1':
-                return UnivariateSpline(te, ty, s=smoothing)(energy)
+                out = UnivariateSpline(te, ty, s=smoothing)(energy)
             else:
-                return np.exp(np.interp(np.log(energy),
+                out = np.exp(np.interp(np.log(energy),
                                         np.log(te),
                                         np.log(ty)))
+            if isinstance(out, np.ndarray) and len(out) == 1:
+                return out[0]
+            return out
 
     def chantler_energies(self, element, emin=0, emax=1.e9):
         """ return array of energies (in eV) at which data is
@@ -299,7 +305,7 @@ class xrayDB(object):
         else:
             nemax = min(len(te), 2 + max(np.where(te<=emax)[0]))
         region = np.arange(nemin, nemax)
-        return te[region], tf1[region], tf2[region]
+        return te[region] # , tf1[region], tf2[region]
 
     def f1_chantler(self, element, energy, **kws):
         """returns f1 -- real part of anomalous x-ray scattering factor
@@ -378,6 +384,7 @@ class xrayDB(object):
         """returns tuple of (energy, fluorescence_yield, edge_jump)
         for an x-ray absorption edge
         """
+        edge = edge.title()
         edges = self.xray_edges(element)
         if edge in edges:
             return edges[edge]
@@ -448,7 +455,7 @@ class xrayDB(object):
             else:
                 rows = rows.filter(tab.element==element.title())
         if has_edge:
-            rows = rows.filter(tab.edge==edge)
+            rows = rows.filter(tab.edge==edge.title())
         out = rows.all()
         if len(out) == 1:
             return(out[0].width)
@@ -475,6 +482,7 @@ class xrayDB(object):
         """
         if isinstance(element, int):
             element = self.symbol(element)
+        energies = 1.0 * as_ndarray(energies)
 
         tab = ScatteringTable
         if kind == 'photo':
@@ -497,7 +505,12 @@ class xrayDB(object):
             tab_val = np.array(json.loads(row.log_photoabsorption))
             tab_spl = np.array(json.loads(row.log_photoabsorption_spline))
 
-        return np.exp(elam_spline(tab_lne, tab_val, tab_spl, np.log(energies)))
+        emin_tab = 10*int(0.102*np.exp(tab_lne[0]))
+        energies[np.where(energies < emin_tab)] = emin_tab
+        out = np.exp(elam_spline(tab_lne, tab_val, tab_spl, np.log(energies)))
+        if len(out) == 1:
+            return out[0]
+        return out
 
     def mu_elam(self, element, energies):
         """returns photo-absorption cross section for an element
