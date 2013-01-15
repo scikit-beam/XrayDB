@@ -23,7 +23,7 @@
 \usepackage{tikz}
 \usepackage[active,tightpage]{preview}
 
-\usetikzlibrary{shapes,calc}
+\usetikzlibrary{shapes,calc,arrows}
 
 \begin{document}
 \begin{preview}
@@ -55,7 +55,7 @@
   \definecolor{DeepBlue}{rgb}{0,0,0.5}
 
   \newcommand{\Color}[2]{{\textcolor{#1}{#2}}}
-  \newcommand{\BRed}[1]{{\Color{MedRed}{\bf{#1}}}}
+  \newcommand{\BRed}[1]{{\Color{MedRed}{\textbf{#1}}}}
   \newcommand{\BBlue}[1]{{\Color{MedBlue}{\textbf{#1}}}}
   \newcommand{\Red}[1]{{\Color{MedRed}{#1}}}
   \newcommand{\Blue}[1]{{\Color{MedBlue}{#1}}}
@@ -209,7 +209,7 @@
   \node[name=Lr, right of=No, Element] {\ElemLr};
 
 % Title, subtitle, key
-  \node at (H.west -| Co.north) [name=diagramTitle, TitleLabel]
+  \node at ($(H.west -| Co.north) + (0mm, 15mm)$) [name=diagramTitle, TitleLabel]
     {X-ray Absorption and Emission Energies of the Elements};
 
   \node at ($(Na.west -| Sc.north) + (0em, 5em)$) [name=diagramTitle, SubTitleLabel]
@@ -223,11 +223,102 @@
       \end{tabular*}
     }}};
 
- \node at ($(Mg.west -| Co.north) + (0em,5em)$) [name=elementKey, Element]{\ElemKey};
+ \node at ($(Mg.west -| Mn.north) + (0em,5em)$) [name=elementKey, Element]{\ElemKey};
 
 %% add some extra space around table
   \node at ($(Lr.south -| Rn.east) + (2em, -2em)$)  [name=Space1, Space]{ };
   \node at ($(H.north  -|  H.west) - (2em, -2em)$)  [name=Space2, Space]{ };
+
+  \tikzset{olevel/.style={line width=0.8mm, draw=black}}
+  \tikzset{elevel/.style={line width=0.8mm, draw=blue!50!black}}
+  \tikzset{xlevel/.style={line width=0.8mm, draw=red!50!black}}
+  \tikzset{frac/.style={->,>=triangle 45, line width=1mm, font={\sffamily\large}}}
+  \tikzset{xray/.style={line width=1mm}}
+  \tikzset{xjoin/.style={line width=1mm}}
+
+\begin{scope}[shift={(-16.75:57cm)}]
+  {\Large{
+       \draw[xlevel] (0,    0mm) node[left] {$K$}   --  ++(21, 0) node[right]  {$1s$};
+
+       \draw[olevel] (0,  40mm) node[left] {$L_1$}  --  ++(21, 0) node[right] {$2s$};
+       \draw[elevel] (0,  45mm) node[left]{$L_2$}   --  ++(21, 0) node[right] {$2p_{1/2}$};
+       \draw[xlevel] (0,  50mm) node[left]{$L_3$}   --  ++(21, 0) node[right] {$2p_{3/2}$};
+
+       \draw[olevel] (0,  80mm) node[left] {$M_1$}  --  ++(21, 0) node[right] {$3s$};
+       \draw[elevel] (0,  85mm) node[left] {}           --  ++(21, 0) node[right] {$3p_{1/2}$};
+       \draw[elevel] (0,  90mm) node[left] {$M_3$}  --  ++(21, 0) node[right] {$3p_{3/2}$};
+       \draw[xlevel] (0,  95mm) node[left] {}            --  ++(21, 0) node[right] {$3d_{3/2}$};
+       \draw[xlevel] (0, 100mm) node[left] {$M_5$} --  ++(21, 0) node[right] {$3d_{5/2}$};
+
+       \draw[olevel] (0, 120mm) node[left] {$N_1$} --  ++(21, 0) node[right] {$4s$};
+       \draw[olevel] (0, 125mm) node[left] {}           --  ++(21, 0) node[right] {$4p_{1/2}$};
+       \draw[olevel] (0, 130mm) node[left] {$N_3$} --  ++(21, 0) node[right] {$4p_{3/2}$};
+       \draw[olevel] (0, 135mm) node[left] {}           --  ++(21, 0) node[right] {$4d_{3/2}$};
+       \draw[olevel] (0, 140mm) node[left] {$N_5$} --  ++(21, 0) node[right] {$4d_{5/2}$};
+       \draw[olevel] (0, 145mm) node[left] {}           --  ++(21, 0) node[right] {$4f_{5/2}$};
+       \draw[olevel] (0, 150mm) node[left] {$N_7$} --  ++(21, 0) node[right] {$4f_{7/2}$};
+
+       % m lines
+       \draw[xray, draw=black] (10mm, 150mm)  -- node[fill=white] {$M_{\alpha_1}$}  (10mm,  120mm) ;
+       \draw[frac, draw=black] (10mm, 120mm)  -- (10mm,  100mm) ;
+
+       % l3 lines
+
+       \draw[xray, draw=black!5, fill=black!5] (10mm, 80mm)  -- node[fill=white] {$L_l$}  (10mm,  70mm) ;
+       \draw[frac, draw=black!5, fill=black!5] (10mm, 70mm)  -- node[fill=white] {0.003}  (10mm,  50mm) ;
+
+       \draw[xray, draw=black!10, fill=black!10] (20mm, 90mm)  -- node[fill=white] {$L_{\alpha_2}$}  (20mm,  70mm) ;
+       \draw[frac, draw=black!10, fill=black!10] (20mm, 70mm)  -- node[fill=white] {0.09}  (20mm,  50mm) ;
+
+       \draw[xray, draw=black!90, fill=black!90] (30mm,  100mm)  -- node[fill=white] {$L_{\alpha_1}$}  (30mm,  70mm) ;
+       \draw[frac, draw=black!90, fill=black!90] (30mm, 70mm)  -- node[fill=white] {0.80}  (30mm,  50mm) ;
+
+
+       \draw[xjoin, draw=black!20, fill=black!20] (35mm, 140mm) -- (40mm, 135mm){};
+       \draw[xray, draw=black!20, fill=black!20] (40mm, 135mm)  -- node[fill=white] {$L_{\beta_2}$}  (40mm, 70mm);
+       \draw[frac, draw=black!20, fill=black!20] (40mm, 70mm)  -- node[fill=white] {0.11}  (40mm,  50mm) ;
+
+       % l2
+       \draw[xray, draw=black] (65mm, 95mm)  -- node[fill=white] {$L_{\beta_1}$}  (65mm, 65mm);
+       \draw[frac, draw=black] (65mm, 65mm)  -- node[fill=white] {0.88}  (65mm, 45mm) ;
+
+       \draw[xray, draw=black!20, fill=black!20] (75mm, 135mm)  -- node[fill=white] {$L_{\gamma_1}$}  (75mm, 65mm);
+       \draw[frac, draw=black!20, fill=black!20] (75mm, 65mm)  -- node[fill=white] {0.09}  (75mm, 45mm) ;
+
+       % l1
+
+       \draw[xray, draw=black!70, fill=black!70] (100mm, 85mm)  -- node[fill=white] {$L_{\beta_4}$}  (100mm, 60mm);
+       \draw[frac, draw=black!70, fill=black!70] (100mm, 60mm)  -- node[fill=white] {0.32}  (100mm, 40mm) ;
+
+       \draw[xray, draw=black!95, fill=black!95] (110mm, 90mm)  -- node[fill=white] {$L_{\beta_3}$}  (110mm, 60mm);
+       \draw[frac, draw=black!95, fill=black!95] (110mm, 60mm)  -- node[fill=white] {0.50}  (110mm, 40mm) ;
+
+       \draw[xray, draw=black!25, fill=black!25] (120mm, 125mm)  -- node[fill=white] {$L_{\gamma_2}$}  (120mm, 60mm);
+       \draw[frac, draw=black!25, fill=black!25] (120mm, 60mm)  -- node[fill=white] {0.08}  (120mm, 40mm) ;
+
+       \draw[xray, draw=black!25, fill=black!25] (130mm, 130mm)  -- node[fill=white] {$L_{\gamma_3}$}  (130mm, 60mm);
+       \draw[frac, draw=black!25, fill=black!25] (130mm, 60mm)  -- node[fill=white] {0.10}  (130mm, 40mm) ;
+
+       %% k
+       \draw[xray, draw=black!65, fill=black!65]  (155mm, 45mm)  -- node[fill=white] {$K_{\alpha_2}$}  (155mm,  20mm) ;
+       \draw[frac, draw=black!65, fill=black!65] (155mm, 20mm)  -- node[fill=white] {0.29}  (155mm,  0mm) ;
+
+       \draw[xray, draw=black] (165mm, 50mm)  -- node[fill=white] {$K_{\alpha_1}$}  (165mm,  20mm) ;
+       \draw[frac, draw=black] (165mm, 20mm)  -- node[fill=white] {0.54}  (165mm,  0mm) ;
+
+       \draw[xray, draw=black!15, fill=black!15] (175mm, 85mm)  -- node[fill=white] {$K_{\beta_3}$} (175mm,  20mm);
+       \draw[frac, draw=black!15, fill=black!15] (175mm, 20mm)  -- node[fill=white] {0.05} (175mm,  0mm);
+
+       \draw[xray, draw=black!25, fill=black!25] (185mm, 90mm)  -- node[fill=white] {$K_{\beta_1}$} (185mm,  20mm);
+       \draw[frac, draw=black!25, fill=black!25] (185mm, 20mm)  -- node[fill=white] {0.09} (185mm,  0mm);
+
+       \draw[xjoin, draw=black!10, fill=black!10] (190mm, 130mm) -- (195mm, 125mm){};
+       \draw[xray, draw=black!10, fill=black!10] (195mm, 125mm)  -- node[fill=white] {$K_{\beta_2}$}  (195mm,  20mm) ;
+       \draw[frac, draw=black!10, fill=black!10] (195mm, 20mm)  -- node[fill=white] {0.03}  (195mm,  0mm) ;
+
+       }}
+   \end{scope}
+
 
 \end{tikzpicture}
 \end{preview}
