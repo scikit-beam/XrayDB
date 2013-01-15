@@ -12,8 +12,8 @@ ptable_xray.pdf: atoms.tex ptable_xray.tex
 	pdflatex ptable_xray
 
 clean:
-	rm -f *.log *.aux *.pyc
+	rm -f *.log *.aux *.pyc *.synctex.gz
 
 distclean:
 	make clean
-	rm -f ptable_xray.pdf atoms.tex
+	rm -f ptable_xray.pdf atoms.tex 
