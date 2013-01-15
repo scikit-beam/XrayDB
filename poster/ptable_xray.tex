@@ -50,9 +50,9 @@
   \tikzstyle{TitleLabel} = [font={\sffamily\Huge\bfseries}, scale=3.0]
   \tikzstyle{SubTitleLabel} = [font={\Huge}, scale=2.50]
 
-  \definecolor{MedRed}{rgb}{0.7,0,0}
-  \definecolor{MedBlue}{rgb}{0,0,0.7}
-  \definecolor{DeepBlue}{rgb}{0,0,0.5}
+  \definecolor{MedRed}{rgb}{0.8,0,0}
+  \definecolor{MedBlue}{rgb}{0,0,0.8}
+  \definecolor{DeepBlue}{rgb}{0,0,0.6}
 
   \newcommand{\Color}[2]{{\textcolor{#1}{#2}}}
   \newcommand{\BRed}[1]{{\Color{MedRed}{\textbf{#1}}}}
@@ -219,7 +219,7 @@
         {\emph{Radiation Physics and Chemistry}}
         {\bf{63}}, pp 121-128 (2002)  \\%
         \noalign{\medskip} \\%
-        {All energies in eV} \hfil\\%
+        {All energies in eV.} \hfil\\%
         {Emission line strengths are approximate, and vary with element.} \hfil\\%
       \end{tabular*}
     }}};
@@ -230,86 +230,8 @@
   \node at ($(Lr.south -| Rn.east) + (2em, -2em)$)  [name=Space1, Space]{ };
   \node at ($(H.north  -|  H.west) - (2em, -2em)$)  [name=Space2, Space]{ };
 
-
-  \tikzset{glevel/.style={line width=0.8mm, draw=black!50}}
-  \tikzset{blevel/.style={line width=0.8mm, draw=blue!50!black}}
-  \tikzset{rlevel/.style={line width=0.8mm, draw=red!50!black}}
-  \tikzset{xray/.style={->,>=triangle 45, line width=1mm, font={\sffamily\Large}}}
-  \tikzset{xjoin/.style={line width=1mm}}
-
-\begin{scope}[shift={(-16.75:54cm)}]
-  {\Large{
-       \draw[rlevel] (0,    0mm) node[left] {$K$}   --  ++(23, 0) node[right]  {$1s$};
-
-       \draw[blevel] (0,  40mm) node[left] {$L_1$}  --  ++(23, 0) node[right] {$2s$};
-       \draw[blevel] (0,  45mm) node[left]{$L_2$}   --  ++(23, 0) node[right] {$2p_{1/2}$};
-       \draw[rlevel] (0,  50mm) node[left]{$L_3$}   --  ++(23, 0) node[right] {$2p_{3/2}$};
-
-       \draw[glevel] (0,  80mm) node[left] {$M_1$}  --  ++(23, 0) node[right] {$3s$};
-       \draw[glevel] (0,  85mm) node[left] {}           --  ++(23, 0) node[right] {$3p_{1/2}$};
-       \draw[glevel] (0,  90mm) node[left] {$M_3$}  --  ++(23, 0) node[right] {$3p_{3/2}$};
-       \draw[glevel] (0,  95mm) node[left] {}            --  ++(23, 0) node[right] {$3d_{3/2}$};
-       \draw[rlevel] (0, 100mm) node[left] {$M_5$} --  ++(23, 0) node[right] {$3d_{5/2}$};
-
-       \draw[glevel] (0, 120mm) node[left] {$N_1$} --  ++(23, 0) node[right] {$4s$};
-       \draw[glevel] (0, 125mm) node[left] {}           --  ++(23, 0) node[right] {$4p_{1/2}$};
-       \draw[glevel] (0, 130mm) node[left] {$N_3$} --  ++(23, 0) node[right] {$4p_{3/2}$};
-       \draw[glevel] (0, 135mm) node[left] {}           --  ++(23, 0) node[right] {$4d_{3/2}$};
-       \draw[glevel] (0, 140mm) node[left] {$N_5$} --  ++(23, 0) node[right] {$4d_{5/2}$};
-       \draw[glevel] (0, 145mm) node[left] {}           --  ++(23, 0) node[right] {$4f_{5/2}$};
-       \draw[glevel] (0, 150mm) node[left] {$N_7$} --  ++(23, 0) node[right] {$4f_{7/2}$};
-
-       % m lines
-
-
-       \draw[xjoin, draw=black, fill=black] (5mm, 150mm) -- ++(5mm, -5mm){};
-       \draw[xray, draw=black] (10mm, 145mm)  -- node[fill=white] { {$M_{\alpha}$} } (10mm, 120mm)   -- (10mm,  100mm) ;
-       \draw[xray, draw=black] (20mm, 145mm)  -- node[fill=white] {$M_{\beta}$}  (20mm, 105mm)  -- (20mm,  95mm) ;
-
-
-        \filldraw (5mm, 150mm) circle (.1);    \filldraw (10mm, 145mm) circle (.1); \filldraw (20mm, 145mm) circle (.1);
-       % l3 lines
-
-       \draw[xray, draw=black!05, fill=black!05] (35mm,   80mm)  -- node[fill=white] {$L_l$}          (35mm,  63mm)  -- node[fill=white] {0.003}  (35mm,  50mm) ;
-       \draw[xray, draw=black!10, fill=black!10] (45mm,   90mm)  -- node[fill=white] {$L_{\alpha_2}$}  (45mm,  74mm)  -- node[fill=white] {0.09}  (45mm,  50mm) ;
-       \draw[xray, draw=black!90, fill=black!90] (55mm,  100mm)  -- node[fill=white] {$L_{\alpha_1}$}  (55mm,  85mm)  -- node[fill=white] {0.80}  (55mm,  50mm) ;
-
-       \draw[xjoin, draw=black!20, fill=black!20] (60mm, 140mm) -- (65mm, 135mm){};
-       \draw[xray, draw=black!20, fill=black!20] (65mm, 135mm)  -- node[fill=white] {$L_{\beta_2}$}  (65mm, 95mm)  -- node[fill=white] {0.11}  (65mm,  50mm) ;
-
-       \filldraw (35mm, 80mm) circle (.1);    \filldraw (45mm, 90mm) circle (.1);     \filldraw (55mm, 100mm) circle (.1);
-       \filldraw (60mm, 140mm) circle (.1);   \filldraw (65mm, 135mm) circle (.1);
-       % l2
-       \draw[xray, draw=black]                        (90mm, 95mm)  -- node[fill=white] {$L_{\beta_1}$}  (90mm, 70mm) -- node[fill=white] {0.88}  (90mm, 45mm) ;
-       \draw[xray, draw=black!20, fill=black!20] (100mm, 135mm)  -- node[fill=white] {$L_{\gamma_1}$}  (100mm, 80mm) -- node[fill=white] {0.09}  (100mm, 45mm) ;
-
-      \filldraw (90mm, 95mm) circle (.1);   \filldraw (100mm, 135mm) circle (.1);
-       % l1
-       \draw[xray, draw=black!70, fill=black!70] (125mm, 85mm)  -- node[fill=white] {$L_{\beta_4}$}  (125mm, 60mm)  -- node[fill=white] {0.32}  (125mm, 40mm) ;
-       \draw[xray, draw=black!95, fill=black!95] (135mm, 90mm)  -- node[fill=white] {$L_{\beta_3}$}  (135mm, 70mm) -- node[fill=white] {0.50}  (135mm, 40mm) ;
-       \draw[xray, draw=black!25, fill=black!25] (145mm, 125mm)  -- node[fill=white] {$L_{\gamma_2}$}  (145mm, 80mm) -- node[fill=white] {0.08}  (145mm, 40mm) ;
-       \draw[xray, draw=black!25, fill=black!25] (155mm, 130mm)  -- node[fill=white] {$L_{\gamma_3}$}  (155mm, 90mm) -- node[fill=white] {0.10}  (155mm, 40mm) ;
-
-       \filldraw (125mm, 85mm) circle (.1);   \filldraw (135mm, 90mm) circle (.1);
-      \filldraw (145mm, 125mm) circle (.1);   \filldraw (155mm, 130mm) circle (.1);
-       %% k
-       \draw[xray, draw=black!65, fill=black!65]  (180mm, 45mm)  -- node[fill=white] {$K_{\alpha_2}$}  (180mm,  25mm) -- node[fill=white] {0.29}  (180mm,  0mm) ;
-       \draw[xray, draw=black]                      (190mm, 50mm)  -- node[fill=white] {$K_{\alpha_1}$}  (190mm,  35mm) -- node[fill=white] {0.54}  (190mm,  0mm) ;
-       \draw[xray, draw=black!15, fill=black!15] (200mm, 85mm)  --  node[fill=white] {$K_{\beta_3}$}   (200mm,  45mm) -- node[fill=white] {0.05} (200mm,  0mm);
-       \draw[xray, draw=black!25, fill=black!25] (210mm, 90mm)  --  node[fill=white] {$K_{\beta_1}$}   (210mm,  55mm) -- node[fill=white] {0.09} (210mm,  0mm);
-
-       \draw[xjoin, draw=black!10, fill=black!10] (215mm, 130mm) -- ++(5mm, -5mm){};
-       \draw[xray, draw=black!10, fill=black!10] (220mm, 125mm)  -- node[fill=white] {$K_{\beta_2}$}  (220mm, 65mm)  -- node[fill=white] {0.03}  (220mm,  0mm) ;
-
-
-       \filldraw (180mm, 45mm) circle (.1);   \filldraw (190mm, 50mm) circle (.1);
-      \filldraw (200mm, 85mm) circle (.1);   \filldraw (210mm, 90mm) circle (.1);
-   
-      \filldraw (215mm, 130mm) circle (.1);   \filldraw (220mm, 125mm) circle (.1);
-
-       }}
-   \end{scope}
-
+%% add emission line table
+  \input{elines}
 
 \end{tikzpicture}
 \end{preview}
