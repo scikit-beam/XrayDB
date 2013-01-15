@@ -44,10 +44,10 @@ table=r"""\newcommand{\%(texsym)s}{{%%
 {\Large{
 \begin{tabular*}{67mm}%%
 {@{\hspace{5pt}}{r}@{\extracolsep{\fill}}r@{\extracolsep{\fill}}r}%%
-{\BRed{%(k)s}}  & {\bf{%(ka1)s}} &  {\bf{%(kb1)s}} \\%%
+{\BRed{%(k)s}}  & {\textbf{%(ka1)s}} &  {\textbf{%(kb1)s}} \\%%
 {\BBlue{%(l1)s}} & %(lb3)s & %(lb4)s \\%%
 {\BBlue{%(l2)s}} & %(lb1)s & %(lg1)s \\%%
-{\BRed{%(l3)s}} & {\bf{%(la1)s}} & {\bf{%(lb2)s}} \\%%
+{\BRed{%(l3)s}} & {\textbf{%(la1)s}} & {\textbf{%(lb2)s}} \\%%
 {\BBlue{%(m5)s}} & %(ma)s & %(mb)s \\%%
 \multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
 \end{tabular*}
@@ -109,16 +109,15 @@ print table % {'iz': 'Z', 'sym': 'Symbol', 'name': 'name',
                'k':   r'$\mathbf{K}$ edge',
                'ka1': r'$\mathbf{K_{\alpha_1}}$',
                'kb1': r'$\mathbf{K_{\beta_1}}$',
-               'l1':  r'$\mathrm{L_{\rm I}}$ edge',
+               'l1':  r'$\mathrm{L_{\rm 1}}$ edge',
                'lb3': r'$\mathrm{L_{\beta_3}}$',
                'lb4': r'$\mathrm{L_{\beta_4}}$',
-               'l2':  r'$\mathrm{L_{\rm II}}$ edge',
+               'l2':  r'$\mathrm{L_{\rm 2}}$ edge',
                'lb1': r'$\mathrm{L_{\beta_1}}$',
                'lg1': r'$\mathrm{L_{\gamma_1}}$',
-               'l3':  r'$\mathbf{L_{\rm III}}$ edge',
+               'l3':  r'$\mathbf{L_{\rm 3}}$ edge',
                'la1': r'$\mathbf{L_{\alpha_1}}$',
                'lb2': r'$\mathbf{L_{\beta_2}}$',
-               'm5':  r'$\mathrm{M_{\rm V}}$ edge',
+               'm5':  r'$\mathrm{M_{\rm 5}}$ edge',
                'ma':  r'$\mathrm{M_{\alpha}}$',
                'mb':  r'$\mathrm{M_{\beta}}$'}
-
