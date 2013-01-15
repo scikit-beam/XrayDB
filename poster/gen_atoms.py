@@ -35,11 +35,11 @@ table=r"""\newcommand{\%(texsym)s}{{%%
 
 {\Huge{\hspace{1mm} {\textbf{%(sym)s}} \hfill \hfil{\textbf{%(iz)s}} \hspace{1mm}}} %%
 
-\vspace{6mm}
+\vspace{4mm}
 
 {\Huge{\hfill {\Name{%(name)s}} \hfill}}
 
-\vspace{6mm}
+\vspace{5mm}
 
 {\Large{
 \begin{tabular*}{67mm}%%
@@ -49,9 +49,10 @@ table=r"""\newcommand{\%(texsym)s}{{%%
 {\BBlue{%(l2)s}} & %(lb1)s & %(lg1)s \\%%
 {\BRed{%(l3)s}} & {\textbf{%(la1)s}} & {\textbf{%(lb2)s}} \\%%
 {\BBlue{%(m5)s}} & %(ma)s & %(mb)s \\%%
-\multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
+\noalign{\medskip} %%  \multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
+{\textbf{%(mass)s}} & \multicolumn{2}{r}{%(states)s}\\%%
 \end{tabular*}
-\vfill}}
+}}
 \end{minipage}}}
 """
 
@@ -63,6 +64,9 @@ for iz in range(1, 99):
 
     edges = db.xray_edges(iz)
     lines = db.xray_lines(iz)
+    dat['mass']  = str(db.molar_mass(iz))
+    dat['states']  = '+1,'
+
     dat['k']   = extract(edges, 'K')
     dat['ka1'] = extract(lines, 'Ka1')
     dat['kb1'] = extract(lines, 'Kb1')
@@ -98,13 +102,14 @@ for iz, sym, name in highz:
            'texsym': "Elem%s" % sym,
            'k': '', 'ka1': '', 'kb1': '', 'l1' : '', 'lb3': '', 'lb4': '',
            'l2' : '', 'lb1': '', 'lg1': '', 'l3' : '', 'la1': '', 'lb2':
-           '', 'm5': '', 'ma': '', 'mb': ''}
+           '', 'm5': '', 'ma': '', 'mb': '', 'mass':'', 'states':''}
 
     print '%% ', dat['name']
     print table % dat
 
 print '%% Key'
 print table % {'iz': 'Z', 'sym': 'Symbol', 'name': 'name',
+               'mass': 'A',  'states': 'oxidation states',
                'texsym': "ElemKey",
                'k':   r'$\mathbf{K}$ edge',
                'ka1': r'$\mathbf{K_{\alpha_1}}$',
