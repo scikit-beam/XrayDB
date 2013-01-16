@@ -28,6 +28,107 @@ elnames = ('', 'hydrogen' , 'helium', 'lithium' , 'beryllium', 'boron' ,
            'thorium','protactinium', 'uranium','neptunium' , 'plutonium',
            'americium', 'curium', 'berkelium', 'californium')
 
+chemstates = {'':'',
+              'hydrogen':'+1',
+              'helium':'',
+              'lithium' :'+1',
+              'beryllium':'+3',
+              'boron' :'+3',
+              'carbon' :'-4, -3, \ldots, +2, +3, +4',
+              'nitrogen' :'-3, +3, +5',
+              'oxygen':'-2',
+              'fluorine' :'-1',
+              'neon' :'',
+              'sodium':'+1',
+              'magnesium':'+2',
+              'aluminum' :'+3',
+              'silicon':'-4, +4',
+              'phosphorus' :'-3, +3, +5',
+              'sulfur':'-2, +2, +4, +6',
+              'chlorine' :'-1, +1, +3, +5, +7',
+              'argon':'',
+              'potassium' :'+1',
+              'calcium':'+2',
+              'scandium' :'+3',
+              'titanium':'+3, +4',
+              'vanadium' :'+2, +3, +4, +5',
+              'chromium':'+2, +3, +6',
+              'manganese' :'+2, +3, +4, +7',
+              'iron':'+2, +3',
+              'cobalt' :'+2, +3',
+              'nickel':'+2',
+              'copper' :'+1, +2',
+              'zinc':'+2',
+              'gallium' :'+3',
+              'germanium':'-4, +2, +4',
+              'arsenic' :'-3, +3, +5',
+              'selenium':'-2, +2, +4, +6',
+              'bromine' :'-1, +1, +3, +5',
+              'krypton':'',
+              'rubidium' :'+1',
+              'strontium':'+2',
+              'yttrium' :'+3',
+              'zirconium':'+4',
+              'niobium' :'+4, +5',
+              'molybdenum':'+3, +4, +6',
+              'technetium' :'+4, +7',
+              'ruthenium':'+3, +4, +6',
+              'rhodium' :'+2, +3, +4',
+              'palladium':'+2, +4',
+              'silver' :'+1',
+              'cadmium':'+2',
+              'indium' :'+3',
+              'tin':'-4, +2, +4',
+              'antimony' :'-3, +3, +5',
+              'tellurium':'-2, +2, +4, +6',
+              'iodine' :'-1, +1, +3, +5, +7',
+              'xenon':'',
+              'cesium' :'+1',
+              'barium':'+2',
+              'lanthanum' :'+3',
+              'cerium':'+3, +4',
+              'praseodymium':'+3, +4',
+              'neodymium':'+3',
+              'promethium' :'+3',
+              'samarium':'+3',
+              'europium' :'+2, +3',
+              'gadolinium':'+3',
+              'terbium' :'+3, +4',
+              'dysprosium':'+3',
+              'holmium' :'+3',
+              'erbium':'+3',
+              'thulium' :'+3',
+              'ytterbium':'+3',
+              'lutetium' :'+3',
+              'hafnium':'+4',
+              'tantalum' :'+5',
+              'tungsten':'+4, +6',
+              'rhenium' :'+4',
+              'osmium':'+4',
+              'iridium' :'+3, +4',
+              'platinum':'+2, +4',
+              'gold' :'+1, +3',
+              'mercury':'+1, +2',
+              'thallium' :'+1, +3',
+              'lead':'+2, +4',
+              'bismuth' :'+3, +5',
+              'polonium':'-2, +2, +4',
+              'astatine':'-1, +1',
+              'radon':'',
+              'francium' :'+1',
+              'radium':'+2',
+              'actinium' :'+3',
+              'thorium':'+4',
+              'protactinium':'+5',
+              'uranium':'+4, +6',
+              'neptunium' :'+3, +4, +5',
+              'plutonium':'+3, +4, +5',
+              'americium':'+3, +4, +5',
+              'curium':'+3',
+              'berkelium':'+3, +4',
+              'californium':'+3'}
+
+
 table=r"""\newcommand{\%(texsym)s}{{%%
 \begin{minipage}{67mm}
 
@@ -50,7 +151,7 @@ table=r"""\newcommand{\%(texsym)s}{{%%
 {\BRed{%(l3)s}} & {\textbf{%(la1)s}} & {\textbf{%(lb2)s}} \\%%
 {\BBlue{%(m5)s}} & %(ma)s & %(mb)s \\%%
 \noalign{\medskip} %%  \multicolumn{3}{@{\hspace{1pt}}c}{ }\\%%
-{\textbf{%(mass)s}} & \multicolumn{2}{r}{%(states)s}\\%%
+{\textbf{%(mass)s}} & \multicolumn{2}{r}{\large{%(states)s}}\\%%
 \end{tabular*}
 }}
 \end{minipage}}}
@@ -65,7 +166,8 @@ for iz in range(1, 99):
     edges = db.xray_edges(iz)
     lines = db.xray_lines(iz)
     dat['mass']  = str(db.molar_mass(iz))
-    dat['states']  = '+1,'
+    dat['states']  = chemstates.get(elnames[iz], '')
+
 
     dat['k']   = extract(edges, 'K')
     dat['ka1'] = extract(lines, 'Ka1')
@@ -109,7 +211,7 @@ for iz, sym, name in highz:
 
 print '%% Key'
 print table % {'iz': 'Z', 'sym': 'Symbol', 'name': 'name',
-               'mass': 'A',  'states': 'oxidation states',
+               'mass': 'Mass',  'states': 'oxidation states',
                'texsym': "ElemKey",
                'k':   r'$\mathbf{K}$ edge',
                'ka1': r'$\mathbf{K_{\alpha_1}}$',

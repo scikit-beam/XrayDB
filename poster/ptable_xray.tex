@@ -5,7 +5,8 @@
 %%  Radiation Physics and Chemistry 63 (2002)
 %%
 %%  latex sources based on periodic_table  from Ivan Griffin,
-%% modified by Matt Newville, 2013
+%%
+%%  modified by Matt Newville, Jan-2013
 %%
 %%
 %% This work may be distributed and/or modified under the
@@ -212,23 +213,37 @@
   \node at ($(H.west -| Co.north) + (0mm, 15mm)$) [name=diagramTitle, TitleLabel]
     {X-ray Absorption and Emission Energies of the Elements};
 
-  \node at ($(Na.west -| V.north) + (-5em, 5em)$) [name=diagramTitle, SubTitleLabel]
+  \node at ($(Na.west -| V.north) + (-7em, 7em)$) [name=diagramTitle, SubTitleLabel]
   {\small{\textsf{
       \begin{tabular*}{5mm}{l}
-        Data from  Elam, Ravel, and Sieber, \hfil\\%
+        Atomic Data and Energies from \\%
+        W. T. Elam, B. D. Ravel and  J. R. Sieber, \hfil\\%
         {\emph{Radiation Physics and Chemistry}}
         {\bf{63}}, pp 121-128 (2002)  \\%
-        \noalign{\medskip} \\%
+        \noalign{\smallskip} \\%
+        Common oxidation states from wikipedia.org, after\\%
+        N. N. Greenwood and A. Earnshaw, \\
+      {\emph{Chemistry of the Elements}}, 2nd  ed. (1997).\\%
+        \noalign{\smallskip} \\%
         {All energies in eV.} \hfil\\%
         {Emission line strengths are approximate, and vary with element.} \hfil\\%
       \end{tabular*}
     }}};
 
- \node at ($(Mg.west -| Ti.north) + (0em,5em)$) [name=elementKey, Element]{\ElemKey};
+ \node at ($(Mg.west -| Ti.north) + (0em,7em)$) [name=elementKey, Element]{\ElemKey};
 
 %% add some extra space around table
   \node at ($(Lr.south -| Rn.east) + (2em, -2em)$)  [name=Space1, Space]{ };
   \node at ($(H.north  -|  H.west) - (2em, -2em)$)  [name=Space2, Space]{ };
+
+   \node at ($(Th.south -| Fr.west) + (10mm, 35mm)$) [name=diagramTitle, SubTitleLabel]{};
+    % {\small{\textsf{
+    %       \begin{tabular*}{5mm}{l}
+    %         This Periodic Table is available from: \\%
+    %         {\hspace{5mm} http://cars.uchicago.edu/xray\_table/  \hfil} \\%
+    %       \end{tabular*}
+    %   }}};
+
 
 %% add emission line table
   \input{elines}
