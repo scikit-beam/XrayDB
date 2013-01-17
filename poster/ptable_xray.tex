@@ -26,6 +26,7 @@
 
 \usetikzlibrary{shapes,calc,arrows}
 
+
 \begin{document}
 \begin{preview}
 
@@ -48,7 +49,7 @@
   \tikzstyle{Space} = [draw=white, SpaceFill,
   minimum width=5mm, minimum height=5mm, node distance=5mm]
 
-  \tikzstyle{TitleLabel} = [font={\sffamily\Huge\bfseries}, scale=3.0]
+  \tikzstyle{TitleLabel} = [font={\sffamily\Huge\bfseries}, scale=3.50]
   \tikzstyle{SubTitleLabel} = [font={\Huge}, scale=2.50]
 
   \definecolor{MedRed}{rgb}{0.8,0,0}
@@ -236,13 +237,30 @@
   \node at ($(Lr.south -| Rn.east) + (2em, -2em)$)  [name=Space1, Space]{ };
   \node at ($(H.north  -|  H.west) - (2em, -2em)$)  [name=Space2, Space]{ };
 
-   \node at ($(Th.south -| Fr.west) + (10mm, 35mm)$) [name=diagramTitle, SubTitleLabel]{};
-    % {\small{\textsf{
-    %       \begin{tabular*}{5mm}{l}
-    %         This Periodic Table is available from: \\%
-    %         {\hspace{5mm} http://cars.uchicago.edu/xray\_table/  \hfil} \\%
-    %       \end{tabular*}
-    %   }}};
+
+\pgfdeclareimage[height=35mm]{Barkla}{images/Charles_Barkla}
+\pgfdeclareimage[width=20mm]{qrcode}{images/xraytable_qr}
+
+   \node at ($(Th.south -| Fr.west) + (35mm, 7mm)$) [name=diagramTitle,
+   SubTitleLabel]{
+     {\small{\textsf{
+           \begin{tabular}{c}
+           \pgfbox[center,bottom]{\pgfuseimage{Barkla}}\\
+           Charles G. Barkla\\
+         \end{tabular}
+       }}}
+   };
+
+   \node at ($(Th.south -| Ac.west) + (15mm, 15mm)$) [name=diagramTitle,
+   SubTitleLabel]{
+     {\small{\textsf{
+           \begin{tabular}{c}
+             \pgfbox[center,bottom]{\pgfuseimage{qrcode}}\\
+             \noalign{\medskip}
+             This Periodic Table is freely available at:\\
+             http://xafs.org/Databases/XrayTable \hfil \\%
+           \end{tabular}
+           }}}};
 
 
 %% add emission line table
