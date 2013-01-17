@@ -251,14 +251,16 @@
        }}}
    };
 
-   \node at ($(Th.south -| Ac.west) + (15mm, 15mm)$) [name=diagramTitle,
+   \node at ($(Ce.south -| Ac.west) + (15mm, 5mm)$) [name=diagramTitle,
    SubTitleLabel]{
      {\small{\textsf{
-           \begin{tabular}{c}
-             \pgfbox[center,bottom]{\pgfuseimage{qrcode}}\\
-             \noalign{\medskip}
+           \begin{tabular}{l}
              This Periodic Table is freely available at:\\
              http://xafs.org/Databases/XrayTable \hfil \\%
+             \noalign{\smallskip}
+             Version 1, 16-Jan-2013\\
+             \noalign{\smallskip}
+             \hspace{25mm} \pgfbox[center,top]{\pgfuseimage{qrcode}}\\
            \end{tabular}
            }}}};
 
