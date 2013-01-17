@@ -8,7 +8,7 @@ pdf:
 atoms.tex:  gen_atoms.py
 	python gen_atoms.py > atoms.tex
 
-ptable_xray.pdf: atoms.tex ptable_xray.tex
+ptable_xray.pdf: atoms.tex ptable_xray.tex elines.tex
 	pdflatex ptable_xray
 
 clean:
@@ -16,4 +16,4 @@ clean:
 
 distclean:
 	make clean
-	rm -f ptable_xray.pdf atoms.tex 
+	rm -f ptable_xray.pdf atoms.tex
