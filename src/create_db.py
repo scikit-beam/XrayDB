@@ -331,7 +331,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='export the Elam, Waasmaier, Chantler data to an SQLite database "dest"'
         )
-    dest = 'xrayref.db'
+    dest = 'xraydb.sqlite'
     parser.add_argument('-f', '--force', action='store_true')
     parser.add_argument('-s', '--silent', action='store_true')
     args = parser.parse_args()
