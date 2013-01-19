@@ -144,7 +144,7 @@ class ChantlerTable(_BaseTable):
 
 class xrayDB(object):
     "interface to Xray Data"
-    def __init__(self, dbname='xrayref.db'):
+    def __init__(self, dbname='xraydb.sqlite'):
         "connect to an existing database"
         if not os.path.exists(dbname):
             parent, child = os.path.split(__file__)
