@@ -142,7 +142,7 @@ class ChantlerTable(_BaseTable):
      corr_henke, corr_cl35, corr_nucl,
      energy, f1, f2, mu_photo, mu_incoh, mu_total) = [None]*14
 
-class xrayDB(object):
+class XrayDB(object):
     "interface to Xray Data"
     def __init__(self, dbname='xraydb.sqlite'):
         "connect to an existing database"
