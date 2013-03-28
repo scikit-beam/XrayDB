@@ -17,3 +17,6 @@ Code to Generate XrayDB:
 
    generate_coreholewidths.py:
         script to generate core-level widths.
+
+   get_schema.sh:
+        script to generate schema file from xraydb.sqlite

@@ -1,5 +1,5 @@
-from xraydb import xrayDB
-db = xrayDB()
+from xraydb import XrayDB
+db = XrayDB()
 
 def extract(dat, key):
     val = dat.get(key, [' '])[0]
