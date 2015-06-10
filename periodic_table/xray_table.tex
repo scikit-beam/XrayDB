@@ -40,6 +40,7 @@
 %%      scale=0.714 for 36 inch width
 
 \begin{tikzpicture}[font=\sffamily, scale=0.714, transform shape]
+%% \begin{tikzpicture}[font=\sffamily, scale=1.0, transform shape]
 
 %% Fill Color Styles
   \tikzstyle{ElementFill} = [fill=yellow!4]
@@ -239,15 +240,16 @@
   \node at ($(H.north  -|  H.west) - (2em, -2em)$)  [name=Space2, Space]{ };
 
 
-\pgfdeclareimage[height=35mm]{Barkla}{images/Charles_Barkla}
+%%\pgfdeclareimage[height=35mm]{Barkla}{images/Charles_Barkla}
+\pgfdeclareimage[height=35mm]{Moseley}{images/Henry_Moseley}
 \pgfdeclareimage[width=20mm]{qrcode}{images/xraytable_qr}
 
    \node at ($(Th.south -| Fr.west) + (35mm, 7mm)$) [name=diagramTitle,
    SubTitleLabel]{
      {\small{\textsf{
            \begin{tabular}{c}
-           \pgfbox[center,bottom]{\pgfuseimage{Barkla}}\\
-           Charles G. Barkla\\
+           \pgfbox[center,bottom]{\pgfuseimage{Moseley}}\\
+           Henry Moseley\\
          \end{tabular}
        }}}
    };
@@ -259,12 +261,11 @@
              This Periodic Table is freely available at:\\
              http://xafs.org/Databases/XrayTable \hfil \\%
              \noalign{\smallskip}
-             Version 2, 26-Mar-2013\\
+             Version 3, 08-June-2015\\
              \noalign{\smallskip}
              \hspace{25mm} \pgfbox[center,top]{\pgfuseimage{qrcode}}\\
            \end{tabular}
            }}}};
-
 
 %% add emission line table
   \input{elines}
@@ -272,5 +273,3 @@
 \end{tikzpicture}
 \end{preview}
 \end{document}
-
-
