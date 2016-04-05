@@ -10,7 +10,7 @@ import os
 import time
 import json
 import numpy as np
-from scipy.interpolate import interp1d, splrep, splev, UnivariateSpline
+from scipy.interpolate import interp1d, splrep, UnivariateSpline
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers
 from sqlalchemy.pool import SingletonThreadPool
