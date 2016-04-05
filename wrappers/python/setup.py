@@ -2,7 +2,7 @@
 import os
 import sys
 import shutil
-from distutils.core import setup
+from setuptools import setup
 
 dbfile = 'xraydb.sqlite'
 
@@ -46,6 +46,3 @@ setup(name = 'xraydb',
       package_dir = {'xraydb': 'xraydb'},
       packages = ['xraydb'],
       package_data = {'xraydb': [dbfile]})
-
-# remove db file from lib
-os.unlink(os.path.join('lib', dbfile))
