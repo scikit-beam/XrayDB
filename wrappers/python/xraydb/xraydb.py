@@ -9,6 +9,7 @@ Main Class for full Database:  xrayDB
 import os
 import time
 import json
+from collections import namedtuple
 import numpy as np
 from scipy.interpolate import interp1d, splrep, UnivariateSpline
 from sqlalchemy import MetaData, create_engine
@@ -17,6 +18,10 @@ from sqlalchemy.pool import SingletonThreadPool
 
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
+
+
+Edge = namedtuple('Edge', ('adsorption_edge', 'fluorescence_yield',
+                           'jump_ratio'))
 
 def as_ndarray(obj):
     """make sure a float, int, list of floats or ints,
@@ -375,9 +380,9 @@ class XrayDB(object):
         tab = XrayLevelsTable
         out = {}
         for r in self.query(tab).filter(tab.element==element.title()).all():
-            out[str(r.iupac_symbol)] = (r.absorption_edge,
-                                        r.fluorescence_yield,
-                                        r.jump_ratio)
+            out[str(r.iupac_symbol)] = Edge(r.absorption_edge,
+                                            r.fluorescence_yield,
+                                            r.jump_ratio)
         return out
 
     def xray_edge(self, element, edge):
