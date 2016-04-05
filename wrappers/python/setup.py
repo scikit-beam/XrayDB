@@ -6,7 +6,7 @@ from distutils.core import setup
 
 dbfile = 'xraydb.sqlite'
 
-required_modules = ('sqlalchemy', 'json', 'numpy')
+required_modules = ('sqlalchemy', 'json', 'numpy', 'scipy')
 def check_dependencies(modules):
     missing = []
     for mod in modules:
