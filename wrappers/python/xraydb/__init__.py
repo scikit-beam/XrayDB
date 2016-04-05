@@ -11,5 +11,4 @@
             The University of Chicago
 
 """
-__version__ = '1.0'
-from xraydb import XrayDB
+from .xraydb import XrayDB

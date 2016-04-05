@@ -5,7 +5,6 @@ import shutil
 from distutils.core import setup
 
 dbfile = 'xraydb.sqlite'
-from lib import __version__
 
 required_modules = ('sqlalchemy', 'json', 'numpy')
 def check_dependencies(modules):
@@ -26,12 +25,12 @@ def check_dependencies(modules):
 
 check_dependencies(required_modules)
 
-# copy db from ../.. to lib
+# copy db from ../.. to xraydb
 shutil.copy(os.path.join('..', '..', dbfile),
-            os.path.join('lib', dbfile))
+            os.path.join('xraydb', dbfile))
 
 setup(name = 'xraydb',
-      version = __version__,
+      version = '1.0.1',
       author = 'Matthew Newville',
       author_email = 'newville@cars.uchicago.edu',
       url          = 'http://github.com/XraySpectroscopy/XrayDB',
@@ -44,7 +43,7 @@ setup(name = 'xraydb',
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
                    'Topic :: Scientific/Engineering'],
-      package_dir = {'xraydb': 'lib'},
+      package_dir = {'xraydb': 'xraydb'},
       packages = ['xraydb'],
       package_data = {'xraydb': [dbfile]})
 
