@@ -9,7 +9,7 @@ import io
 import json
 import os
 import sqlite3
-from string import maketrans
+# from string import maketrans
 from itertools import zip_longest
 from collections import namedtuple
 
@@ -578,7 +578,18 @@ def parse_EADL(fname):
         944: 'real_anomalous_scattering_factor',
     }
     particle_map = {7: 'photon', 0: 'none', 9: 'electron', 8: 'positron'}
-    reaction_code_map = {91: 'subshell', 92: 'transition'}
+    reaction_code_map = {91: 'subshell', 92: 'transition',
+                         71: 'coherent scattering',
+                         72: 'incoherent scattering',
+                         73: 'photoelectric effect',
+                         74: 'pair production',
+                         75: 'triplet production',
+                         93: 'whole atom parameters'}
+    interpolation_map = {0: 'linear in x and y',
+                         2: 'linear in x and y',
+                         3: 'logarithmic in x, linear in y',
+                         4: 'linear in x, logarithmic in y',
+                         5: 'logarithmic in x and y'}
 
     def _proc_shell_int(header, row):
         klass = reaction_proprety_classes[header['I']]
@@ -609,7 +620,16 @@ def parse_EADL(fname):
                      SHELL_MAP[k], k,
                      fnr, Enr)
 
+    def _proc_float_float(header, row):
+        klass = reaction_proprety_classes[header['I']]
+        return klass(*row)
+
     reaction_proprety_classes = {
+        0: namedtuple('IntegratedCrossSection',
+                      ('E_incident', 'cross_section')),
+        10: namedtuple('AverageEneregySecondary',
+                       ('E_incident', 'E_secondary')),
+        11: namedtuple('AverageEnergyResidual', ('E_incident', 'E_residual')),
         912: namedtuple('NumberOfElectrons', ('shell', 'shell_code', 'N')),
         913: namedtuple('BindingEnergy', ('shell', 'shell_code', 'E_be')),
         914: namedtuple('KeneticEnergy', ('shell', 'shell_code', 'E_ke')),
@@ -633,9 +653,16 @@ def parse_EADL(fname):
                         ('shell', 'shell_code', 'E_p')),
         935: namedtuple('AverageEofRisdualAtom',
                         ('shell', 'shell_code', 'E_mean')),
+        941: namedtuple('FormFactor', ('x', 'F')),
+        942: namedtuple('ScatteringFunction', ('x', 'S')),
+        943: namedtuple('ImAnaomalousScatteringFactor', ('E_incident', 'Im')),
+        944: namedtuple('ReAnaomalousScatteringFactor', ('E_incident', 'Re')),
         }
 
     reaction_property_funcs = {
+        0: _proc_float_float,
+        10: _proc_float_float,
+        11: _proc_float_float,
         912: _proc_shell_int,
         913: _proc_shell_float,
         914: _proc_shell_float,
@@ -647,18 +674,27 @@ def parse_EADL(fname):
         933: _proc_shell_float,
         934: _proc_shell_float,
         935: _proc_shell_float,
+        941: _proc_float_float,
+        942: _proc_float_float,
+        943: _proc_float_float,
+        944: _proc_float_float,
         }
 
     BREAK_TOKEN = ' ' * 71 + '1'
 
-    def _grouper(n, iterable, fillvalue=None):
+    def _grouper(n, iterable, fillvalue='0'):
         "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
         args = [iter(iterable)] * n
         return zip_longest(fillvalue=fillvalue, *args)
 
     def _fixed_width_float(val):
-        base = float(val[:8])
-        exp = int(val[8:].replace(' ', ''))
+        split = 8 if val[8] in {'+', '-'} else 9
+        base = float(val[:split])
+        exp = val[split:].replace(' ', '')
+        if exp:
+            exp = int(exp)
+        else:
+            exp = 0
         return base * 10 ** exp
 
     in_section = False
@@ -707,6 +743,12 @@ def parse_EADL(fname):
                 cur_header['Yi'] = Yi = int(ln[7:9])
                 cur_header['Yo'] = Yo = int(ln[10:12])
                 cur_header['Aw'] = Aw = _fixed_width_float(ln[13:24])
+                Iflag = ln[31]
+                if Iflag == ' ':
+                    Iflag = 0
+                else:
+                    Iflag = int(Iflag)
+                cur_header['Iflag'] = Iflag
 
                 cur_header['element'] = Elements[Z-1]
                 cur_header['atomic_number'] = Z
@@ -716,7 +758,7 @@ def parse_EADL(fname):
                 cur_header['incoming_particle_value'] = Yi
                 cur_header['outgoing_particle'] = particle_map[Yo]
                 cur_header['outgoing_particle_value'] = Yo
-
+                cur_header['interpolation'] = interpolation_map[Iflag]
             elif ln == BREAK_TOKEN:
                 in_section = False
             else:
