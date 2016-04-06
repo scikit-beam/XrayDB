@@ -20,7 +20,7 @@ from sqlalchemy.pool import SingletonThreadPool
 import sqlalchemy.dialects.sqlite
 
 
-Edge = namedtuple('Edge', ('adsorption_edge', 'fluorescence_yield',
+Edge = namedtuple('Edge', ('absorption_edge', 'fluorescence_yield',
                            'jump_ratio'))
 Line = namedtuple('Line', ('emission_energy', 'intensity', 'initial_level',
                            'final_level'))
@@ -453,17 +453,13 @@ class XrayDB(object):
     def corehole_width(self, element, edge):
         """returns core hole width for an element and edge"""
         tab = KeskiRahkonenKrauseTable
-        rows = self.query(tab)
-        has_elem = element is not None
-        has_edge = edge is not None
-        if isinstance(element, int):
-            rows = rows.filter(tab.atomic_number==element)
-        else:
-            rows = rows.filter(tab.element==element.title())
-        rows = rows.filter(tab.edge==edge.title())
-        out = rows.all()
-        return [CoreHoleWidth(r.atomic_number, r.edge, r.width)
-                for r in out]
+        element = self.zofsym(element)
+        rows = self.query(tab).filter(
+            tab.atomic_number==element
+            ).filter(
+            tab.edge==edge.title()
+            )
+        return rows.all()[0].width
 
     def Elam_CrossSection(self, element, energies, kind='photo'):
         """returns Elam Cross Section values for an element and energies
