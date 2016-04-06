@@ -9,8 +9,10 @@ import io
 import json
 import os
 import sqlite3
-import sys
 from string import maketrans
+from itertools import zip_longest
+from collections import namedtuple
+
 
 def add_KeskiRahkonen_Krause(dest, append=True):
     """add core-widths from Keski-Rahkonen and Krause. Data from
@@ -319,6 +321,414 @@ def add_Elam(dest, overwrite=False, silent=False):
 
     conn.commit()
     c.close()
+
+_EADL_doc = """
+The 1997 release of the Evaluated Atomic Data Library (EADL97)
+
+This module parses the EADL.DAT file that can be downloaded from:
+
+http://www-nds.iaea.org/epdl97/libsall.htm
+
+EADL contains atomic relaxation information for use in particle transport
+analysis for atomic number Z = 1-100 and for each subshell.
+
+The original units are in cm and MeV.
+
+The specific data are:
+
+- Subshell data
+
+    a) number of electrons
+    b) binding and kinetic energy (MeV)
+    c) average radius (cm)
+    d) radiative and non-radiative level widths (MeV)
+    e) average number of released electrons and x-rays
+    f) average energy of released electrons and x-rays (MeV)
+    g) average energy to the residual atom, i.e., local deposition (MeV)
+
+- Transition probability data
+
+    a) radiation transition probabilities
+    b) non-radiative transition probabilities
+
+The data are organized in blocks with headers.
+
+The first line of the header:
+
+Columns    Format   Definition
+1-3         I3      Z  - atomic number
+4-6         I3      A  - mass number (in all cases=0 for elemental data)
+8-9         I2      Yi - incident particle designator (7 is photon)
+11-12       I2      Yo - outgoing particle designator (0, no particle
+                                                       7, photon
+                                                       8, positron
+                                                       9, electron)
+14-24       E11.4   AW - atomic mass (amu)
+
+26-31       I6      Date of evaluation (YYMMDD)
+
+The second line of the header:
+
+Columns    Format   Definition
+1-2         I2      C  - reaction descriptor
+                                  = 71, coherent scattering
+                                  = 72, incoherent scattering
+                                  = 73, photoelectric effect
+                                  = 74, pair production
+                                  = 75, triplet production
+                                  = 91, subshell parameters
+                                  = 92, transition probabilities
+                                  = 93, whole atom parameters
+
+3-5         I2      I  - reaction property:
+                                  =   0, integrated cross section
+                                  =  10, avg. energy of Yo
+                                  =  11, avg. energy to the residual atom
+                                  = 912, number of electrons
+                                  = 913, binding energy
+                                  = 914, kinetic energy
+                                  = 915, average radius
+                                  = 921, radiative level width
+                                  = 922, non-radiative level width
+                                  = 931, radiative transition probability
+                                  = 932, non-radiative transition probability
+                                  = 933, particles per initial vacancy
+                                  = 934, energy of particles per initial vacancy
+                                  = 935, average energy to the residual atom, i.e.
+                                         local deposition, per initial vacancy
+                                  --- moved to EPDL97 ---
+                                  = 941, form factor
+                                  = 942, scattering function
+                                  = 943, imaginary anomalous scatt. factor
+                                  = 944, real anomalous scatt. factor
+
+6-8         I3      S  - reaction modifier:
+                                  =  0 no X1 field data required
+                                  = 91 X1 field data required
+
+22-32       #11.4   X1 - subshell designator
+                                      0 if S is 0
+                                      if S is 91, subshell designator
+
+
+                 Summary of the EADL Data Base
+--------------------------------------------------------------------------
+Yi    C    S    X1    Yo   I          Data Types
+--------------------------------------------------------------------------
+                     Subshell parameters
+--------------------------------------------------------------------------
+0    91    0    0.    0    912        number of electrons
+0    91    0    0.    0    913        binding energy
+0    91    0    0.    0    914        kinetic energy
+0    91    0    0.    0    915        average radius
+0    91    0    0.    0    921        radiative level width
+0    91    0    0.    0    921        non-radiative level width
+--------------------------------------------------------------------------
+                     Transititon probabilities
+--------------------------------------------------------------------------
+0    92    0    0.    0    935        average energy to the residual atom
+0    92    0    0.  7 or 9 933        average number of particles per
+                                      initial vacancy
+0    92    0    0.  7 or 9 934        average energy of particles per
+                                      initial vacancy
+0    92   91    *     0    931        radiative transition probability
+0    92   91    *     0    932        non-radiative transition probability
+---------------------------------------------------------------------------
+Yi    C    S    X1    Yo   I          Data Types
+--------------------------------------------------------------------------
+
+* -> Subshell designator
+
+Data sorted in ascending order Z -> C -> S -> X1 -> Yo -> I
+"""
+
+
+def parse_EADL(fname):
+    '''Parse the EADL data file
+
+    Data source:
+
+    http://www-nds.iaea.org/epdl97/libsall.htm
+
+    Both returned dictionaries share the same keys (which are a subset of
+    the header data.
+
+    The values in the key are ``['Z', 'C', 'S', 'X1', 'Yo', 'I']``
+
+      Z  : atomic number
+      C  : {91, 92} <-> {subshell, transition}
+      S  : if section depends on shell
+      X1 : shell if S
+      Yo : particle out {7, 9, 0} <-> {photon, electron, none}
+      I  : property key
+      Yi : incoming particle {0, 7} <-> {none, photon}
+
+    Parameters
+    ----------
+    fname : str
+
+    Returns
+    -------
+    headers : dict
+        All relevant header information with human-readable aliases.
+
+    data : dict
+        Lists of namedtuple instances for this sub-table
+
+
+    ''' + _EADL_doc
+    SHELL_MAP = {1: 'K (1s1/2)',
+                 2: 'L (2)',
+                 3: 'L1 (2s1/2)',
+                 4: 'L23 (2p)',
+                 5: 'L2 (2p1/2)',
+                 6: 'L3 (2p3/2)',
+                 7: 'M (3)',
+                 8: 'M1 (3s1/2)',
+                 9: 'M23 (3p)',
+                 10: 'M2 (3p1/2)',
+                 11: 'M3 (3p3/2)',
+                 12: 'M45 (3d)',
+                 13: 'M4 (3d3/2)',
+                 14: 'M5 (3d5/2)',
+                 15: 'N (4)',
+                 16: 'N1 (4s1/2)',
+                 17: 'N23 (4p)',
+                 18: 'N2 (4p1/2)',
+                 19: 'N3 (4p3/2)',
+                 20: 'N45 (4d)',
+                 21: 'N4 (4d3/2)',
+                 22: 'N5 (4d5/2)',
+                 23: 'N67 (4f)',
+                 24: 'N6 (4f5/2)',
+                 25: 'N7 (4f7/2)',
+                 26: 'O (5)',
+                 27: 'O1 (5s1/2)',
+                 28: 'O23 (5p)',
+                 29: 'O2 (5p1/2)',
+                 30: 'O3 (5p3/2)',
+                 31: 'O45 (5d)',
+                 32: 'O4 (5d3/2)',
+                 33: 'O5 (5d5/2)',
+                 34: 'O67 (5f)',
+                 35: 'O6 (5f5/2)',
+                 36: 'O7 (5f7/2)',
+                 37: 'O89 (5g)',
+                 38: 'O8 (5g7/2)',
+                 39: 'O9 (5g9/2)',
+                 40: 'P (6)',
+                 41: 'P1 (6s1/2)',
+                 42: 'P23 (6p)',
+                 43: 'P2 (6p1/2)',
+                 44: 'P3 (6p3/2)',
+                 45: 'P45 (6d)',
+                 46: 'P4 (6d3/2)',
+                 47: 'P5 (6d5/2)',
+                 48: 'P67 (6f)',
+                 49: 'P6 (6f5/2)',
+                 50: 'P7 (6f7/2)',
+                 51: 'P89 (6g)',
+                 52: 'P8 (6g7/2)',
+                 53: 'P9 (6g9/2)',
+                 54: 'P1011 (6h)',
+                 55: 'P10 (6h9/2)',
+                 56: 'P11 (6h11/2)',
+                 57: 'Q (7)',
+                 58: 'Q1 (7s1/2)',
+                 59: 'Q23 (7p)',
+                 60: 'Q2 (7p1/2)',
+                 61: 'Q3 (7p3/2)'}
+
+    Elements = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
+                'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca',
+                'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+                'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr',
+                'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In',
+                'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr',
+                'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er',
+                'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt',
+                'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr',
+                'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk',
+                'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg',
+                'Bh', 'Hs', 'Mt']
+
+    KeyTuple = namedtuple('KeyTuple', ['Z', 'C', 'S', 'X1', 'Yo', 'I', 'Yi'])
+
+    def make_dataline_key(inp_dict):
+        return KeyTuple(*tuple(inp_dict[k] for k in KeyTuple._fields))
+
+    reaction_proprety_map = {
+        0: 'cross_section',
+        10: 'secondary_particle_energy',
+        11: 'atom_energy_transfer',
+        912: 'number_of_electrons',
+        913: 'binding_energy',
+        914: 'kinetic_energy',
+        915: 'average_radius',
+        921: 'radiative_level_width',
+        922: 'non-radiative_level_width',
+        931: 'radiative_transition_probability',
+        932: 'non-radiative_transition_probability',
+        933: 'particles_per_initial_vacancy',
+        934: 'energy_of_particles_per_initial_vacancy',
+        935: 'average_energy_to_the_residual_atom',
+        941: 'form_factor',
+        942: 'scattering_function',
+        943: 'imaginary_anomalous_scattering_factor',
+        944: 'real_anomalous_scattering_factor',
+    }
+    particle_map = {7: 'photon', 0: 'none', 9: 'electron', 8: 'positron'}
+    reaction_code_map = {91: 'subshell', 92: 'transition'}
+
+    def _proc_shell_int(header, row):
+        klass = reaction_proprety_classes[header['I']]
+        i, N = map(int, row)
+        return klass(SHELL_MAP[i], i, N)
+
+    def _proc_shell_float(header, row):
+        klass = reaction_proprety_classes[header['I']]
+        i, f = row
+        i = int(i)
+        return klass(SHELL_MAP[i], i, f)
+
+    def _proc_radiative_transfer(header, row):
+        klass = reaction_proprety_classes[header['I']]
+        i = int(header['X1'])
+        j, fr, Er = row
+        j = int(j)
+        return klass(SHELL_MAP[i], i, SHELL_MAP[j], j, fr, Er)
+
+    def _proc_nonradiative_transfer(header, row):
+        klass = reaction_proprety_classes[header['I']]
+        i = int(header['X1'])
+        j, k, fnr, Enr = row
+        j = int(j)
+        k = int(k)
+        return klass(SHELL_MAP[i], i,
+                     SHELL_MAP[j], j,
+                     SHELL_MAP[k], k,
+                     fnr, Enr)
+
+    reaction_proprety_classes = {
+        912: namedtuple('NumberOfElectrons', ('shell', 'shell_code', 'N')),
+        913: namedtuple('BindingEnergy', ('shell', 'shell_code', 'E_be')),
+        914: namedtuple('KeneticEnergy', ('shell', 'shell_code', 'E_ke')),
+        915: namedtuple('AverageRadius', ('shell', 'shell_code', 'r_mean')),
+        921: namedtuple('RadiativeLevelWidth',
+                        ('shell', 'shell_code', 'gamma_r')),
+        922: namedtuple('NonRadiativeLevelWidth',
+                        ('shell', 'shell_code', 'gamma_nr')),
+        931: namedtuple('RadiativeTransitionProbability',
+                        ('primary_shell', 'primary_shell_code',
+                         'secondary_shell', 'secondary_shell_code',
+                         'transition_probability', 'E')),
+        932: namedtuple('NonRadiativeTransitionProbability',
+                        ('primary_shell', 'primary_shell_code',
+                         'secondary_shell', 'secondary_shell_code',
+                         'tertiary_shell', 'tertiary_shell_code',
+                         'transition_probability', 'E')),
+        933: namedtuple('ParticlesPerInitVacency',
+                        ('shell', 'shell_code', 'N_p')),
+        934: namedtuple('EnergePerInitVacency',
+                        ('shell', 'shell_code', 'E_p')),
+        935: namedtuple('AverageEofRisdualAtom',
+                        ('shell', 'shell_code', 'E_mean')),
+        }
+
+    reaction_property_funcs = {
+        912: _proc_shell_int,
+        913: _proc_shell_float,
+        914: _proc_shell_float,
+        915: _proc_shell_float,
+        921: _proc_shell_float,
+        922: _proc_shell_float,
+        931: _proc_radiative_transfer,
+        932: _proc_nonradiative_transfer,
+        933: _proc_shell_float,
+        934: _proc_shell_float,
+        935: _proc_shell_float,
+        }
+
+    BREAK_TOKEN = ' ' * 71 + '1'
+
+    def _grouper(n, iterable, fillvalue=None):
+        "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+        args = [iter(iterable)] * n
+        return zip_longest(fillvalue=fillvalue, *args)
+
+    def _fixed_width_float(val):
+        base = float(val[:8])
+        exp = int(val[8:].replace(' ', ''))
+        return base * 10 ** exp
+
+    in_section = False
+    expect_second_header_line = False
+    ret_header = {}
+    ret_data = {}
+    current_key = None
+    cur_header = None
+    with open(fname, 'r') as fin:
+        for ln in fin:
+            ln = ln.rstrip()
+            if expect_second_header_line:
+                cur_header['C'] = C = int(ln[0:2])
+                cur_header['I'] = I = int(ln[2:5])
+                cur_header['S'] = S = int(ln[5:8])
+                cur_header['X1'] = X1 = int(_fixed_width_float(ln[21:32]))
+                cur_header['reaction_code'] = reaction_code_map[C]
+                cur_header['reaction_property'] = reaction_proprety_map[I]
+                cur_header['reaction_property_code'] = I
+                if S == 91:
+                    cur_header['subshell_code'] = X1
+                    if X1 != 0:
+                        cur_header['subshell'] = SHELL_MAP[X1]
+                    else:
+                        cur_header['subshell'] = 'none'
+                elif S == 0 and X1 == 0:
+                    cur_header['subshell_code'] = 0
+                    cur_header['subshell'] = 'none'
+                else:
+                    raise ValueError('Inconsistent Data X1 = {!r}, '
+                                     'S = {!r}'.forma(X1, S))
+
+                expect_second_header_line = False
+                key = make_dataline_key(cur_header)
+                ret_header[key] = cur_header
+                ret_data[key] = []
+                current_key = key
+                in_section = True
+            elif not in_section:
+                # read the first line
+                expect_second_header_line = True
+
+                cur_header = dict()
+                cur_header['Z'] = Z = int(ln[0:3])
+                cur_header['A'] = A = int(ln[3:6])
+                cur_header['Yi'] = Yi = int(ln[7:9])
+                cur_header['Yo'] = Yo = int(ln[10:12])
+                cur_header['Aw'] = Aw = _fixed_width_float(ln[13:24])
+
+                cur_header['element'] = Elements[Z-1]
+                cur_header['atomic_number'] = Z
+                cur_header['mass_number'] = A
+                cur_header['atomic_mass'] = Aw
+                cur_header['incoming_particle'] = particle_map[Yi]
+                cur_header['incoming_particle_value'] = Yi
+                cur_header['outgoing_particle'] = particle_map[Yo]
+                cur_header['outgoing_particle_value'] = Yo
+
+            elif ln == BREAK_TOKEN:
+                in_section = False
+            else:
+                # get function to process rows of this type
+                proc_func = reaction_property_funcs.get(
+                    cur_header['I'], lambda h, row: list(row))
+                # parse the fixed with data to floats
+                row = [_fixed_width_float(''.join(v))
+                       for v in _grouper(11, ln)]
+                # generate final result representation
+                ret_data[current_key].append(proc_func(cur_header, row))
+        return ret_header, ret_data
 
 if __name__ == '__main__':
     try:
