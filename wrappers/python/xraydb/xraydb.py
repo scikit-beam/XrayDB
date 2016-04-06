@@ -22,6 +22,10 @@ import sqlalchemy.dialects.sqlite
 
 Edge = namedtuple('Edge', ('adsorption_edge', 'fluorescence_yield',
                            'jump_ratio'))
+Line = namedtuple('Line', ('emission_energy', 'intensity', 'initial_level',
+                           'final_level'))
+CoreHoleWidth = namedtuple('CoreHoleWidth',
+                           ('atomic_number', 'edge', 'width'))
 
 def as_ndarray(obj):
     """make sure a float, int, list of floats or ints,
@@ -422,8 +426,8 @@ class XrayDB(object):
                 row = row.filter(tab.initial_level==initial_level.title())
         out = {}
         for r in row.all():
-            out[str(r.siegbahn_symbol)] = (r.emission_energy, r.intensity,
-                                           r.initial_level, r.final_level)
+            out[str(r.siegbahn_symbol)] = Line(r.emission_energy, r.intensity,
+                                               r.initial_level, r.final_level)
         return out
 
     def CK_probability(self, element, initial, final, total=True):
@@ -446,30 +450,20 @@ class XrayDB(object):
             else:
                 return row.transition_probability
 
-    def corehole_width(self, element=None, edge=None):
-        """returns core hole width for an element and edge
-        if element is None, values are returned for all elements
-        if edge is None, values are return for all edges"""
+    def corehole_width(self, element, edge):
+        """returns core hole width for an element and edge"""
         tab = KeskiRahkonenKrauseTable
         rows = self.query(tab)
         has_elem = element is not None
         has_edge = edge is not None
-        if has_elem:
-            if isinstance(element, int):
-                rows = rows.filter(tab.atomic_number==element)
-            else:
-                rows = rows.filter(tab.element==element.title())
-        if has_edge:
-            rows = rows.filter(tab.edge==edge.title())
-        out = rows.all()
-        if len(out) == 1:
-            return(out[0].width)
-        elif has_elem:
-            return [(r.edge, r.width) for r in out]
-        elif has_edge:
-            return [(r.atomic_number, r.width) for r in out]
+        if isinstance(element, int):
+            rows = rows.filter(tab.atomic_number==element)
         else:
-            return [(r.atomic_number, r.edge, r.width) for r in out]
+            rows = rows.filter(tab.element==element.title())
+        rows = rows.filter(tab.edge==edge.title())
+        out = rows.all()
+        return [CoreHoleWidth(r.atomic_number, r.edge, r.width)
+                for r in out]
 
     def Elam_CrossSection(self, element, energies, kind='photo'):
         """returns Elam Cross Section values for an element and energies
