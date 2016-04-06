@@ -9,8 +9,7 @@ import io
 import json
 import os
 import sqlite3
-# from string import maketrans
-from itertools import zip_longest
+from string import maketrans
 from collections import namedtuple
 
 
@@ -682,11 +681,6 @@ def parse_EADL(fname):
 
     BREAK_TOKEN = ' ' * 71 + '1'
 
-    def _grouper(n, iterable, fillvalue='0'):
-        "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
-        args = [iter(iterable)] * n
-        return zip_longest(fillvalue=fillvalue, *args)
-
     def _fixed_width_float(val):
         split = 8 if val[8] in {'+', '-'} else 9
         base = float(val[:split])
@@ -704,8 +698,9 @@ def parse_EADL(fname):
     current_key = None
     cur_header = None
     with open(fname, 'r') as fin:
+
         for ln in fin:
-            ln = ln.rstrip()
+            ln = ln.rstrip('\n\r')
             if expect_second_header_line:
                 cur_header['C'] = C = int(ln[0:2])
                 cur_header['I'] = I = int(ln[2:5])
@@ -766,8 +761,8 @@ def parse_EADL(fname):
                 proc_func = reaction_property_funcs.get(
                     cur_header['I'], lambda h, row: list(row))
                 # parse the fixed with data to floats
-                row = [_fixed_width_float(''.join(v))
-                       for v in _grouper(11, ln)]
+                row = [_fixed_width_float(ln[j*11:(j+1)*11])
+                       for j in range(len(ln) // 11)]
                 # generate final result representation
                 ret_data[current_key].append(proc_func(cur_header, row))
         return ret_header, ret_data
