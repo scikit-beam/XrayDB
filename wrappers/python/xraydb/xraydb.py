@@ -479,6 +479,10 @@ class XrayDB(object):
             element = self.symbol(element)
         energies = 1.0 * as_ndarray(energies)
 
+        kind = kind.lower()
+        if kind not in ('coh', 'incoh', 'photo'):
+            raise ValueError('unknown cross section kind=%s' % kind)
+
         tab = ScatteringTable
         if kind == 'photo':
             tab = PhotoAbsorptionTable
@@ -488,12 +492,11 @@ class XrayDB(object):
             row = row[0]
         if not isinstance(row, tab):
             return None
-
         tab_lne = np.array(json.loads(row.log_energy))
-        if kind.lower().startswith('coh'):
+        if kind.startswith('coh'):
             tab_val = np.array(json.loads(row.log_coherent_scatter))
             tab_spl = np.array(json.loads(row.log_coherent_scatter_spline))
-        elif kind.lower().startswith('incoh'):
+        elif kind.startswith('incoh'):
             tab_val = np.array(json.loads(row.log_incoherent_scatter))
             tab_spl = np.array(json.loads(row.log_incoherent_scatter_spline))
         else:
@@ -507,7 +510,7 @@ class XrayDB(object):
             return out[0]
         return out
 
-    def mu_elam(self, element, energies):
+    def mu_elam(self, element, energies, kind='total'):
         """returns photo-absorption cross section for an element
         at energies (in eV)
 
@@ -520,7 +523,13 @@ class XrayDB(object):
 
         Data from Elam, Ravel, and Sieber.
         """
-        return self.Elam_CrossSection(element, energies, kind='photo')
+        calc = self.Elam_CrossSection
+        xsec = calc(element, energies, kind='photo')
+        if kind.lower().startswith('tot'):
+            xsec += calc(element, energies, kind='coh')
+            xsec += calc(element, energies, kind='incoh')
+
+        return xsec
 
     def coherent_cross_section_elam(self, element, energies):
         """returns coherenet scattering cross section for an element
