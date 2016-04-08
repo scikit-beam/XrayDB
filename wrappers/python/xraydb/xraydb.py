@@ -153,7 +153,7 @@ class ChantlerTable(_BaseTable):
 
 class XrayDB(object):
     "interface to Xray Data"
-    def __init__(self, dbname='xraydb.sqlite'):
+    def __init__(self, dbname='xraydb.sqlite', read_only=True):
         "connect to an existing database"
         if not os.path.exists(dbname):
             parent, child = os.path.split(__file__)
@@ -167,7 +167,16 @@ class XrayDB(object):
         self.dbname = dbname
         self.engine = make_engine(dbname)
         self.conn = self.engine.connect()
-        self.session = sessionmaker(bind=self.engine)()
+        kwargs = {}
+        if read_only:
+            kwargs = {'autoflush': True, 'autocommit':False}
+            def readonly_flush(*args, **kwargs):
+                return
+            self.session = sessionmaker(bind=self.engine, **kwargs)()
+            self.session.flush = readonly_flush
+        else:
+            self.session = sessionmaker(bind=self.engine, **kwargs)()
+
         self.metadata =  MetaData(self.engine)
         self.metadata.reflect()
         tables = self.tables = self.metadata.tables
@@ -247,8 +256,11 @@ class XrayDB(object):
             return f0
 
     def _getChantler(self, element, energy, column='f1', smoothing=1):
-        """return energy-dependent data from Chantler table
+        """
+        return energy-dependent data from Chantler table
         columns: f1, f2, mu_photo, mu_incoh, mu_total
+
+        Note: this function is meant for internal use.
         """
         tab = ChantlerTable
         row = self.query(tab)
@@ -317,24 +329,42 @@ class XrayDB(object):
         return te[region] # , tf1[region], tf2[region]
 
     def f1_chantler(self, element, energy, **kws):
-        """returns f1 -- real part of anomalous x-ray scattering factor
+        """
+        returns f1 -- real part of anomalous x-ray scattering factor
         for selected input energy (or energies) in eV.
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energy:   single energy or ndarray of energies (in eV).
         """
         return self._getChantler(element, energy, column='f1', **kws)
 
+
     def f2_chantler(self, element, energy, **kws):
-        """returns f2 -- imaginary part of anomalous x-ray scattering factor
+        """
+        returns f2 -- imaginary part of anomalous x-ray scattering factor
         for selected input energy (or energies) in eV.
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energy:   single energy or ndarray of energies (in eV).
         """
         return self._getChantler(element, energy, column='f2', **kws)
 
     def mu_chantler(self, element, energy, incoh=False, photo=False):
-        """returns mu/rho in cm^2/gr -- x-ray mass attenuation coefficient
+        """
+        returns x-ray mass attenuation coefficienr, mu/rho in cm^2/gr
         for selected input energy (or energies) in eV.
         default is to return total attenuation coefficient.
-        use
-          photo=True to return only the photo-electric contribution or
-          incoh=True to return on the incoherent contribution
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energy:   single energy or ndarray of energies (in eV).
+        photo:    bool, default False:  return only the photo-electric contribution
+        incoh:    bool, default False:  return only the incoherent contribution
         """
         col = 'mu_total'
         if photo:
@@ -441,13 +471,15 @@ class XrayDB(object):
         """
         out = {}
         for label, eline in self.xray_lines(element).items():
-            try:
-                edge = self.xray_edge(element, eline.initial_level)
-                mu = self.mu_elam(element, [edge.absorption_edge-2,
-                                            edge.absorption_edge+2], kind='photo')
+            edge = self.xray_edge(element, eline.initial_level)
+            if edge is None and ',' in eline.initial_level:
+                ilevel, extra = eline.initial_level.split(',')
+                edge = self.xray_edge(element, ilevel)
+            if edge is not None:
+                mu = self.mu_elam(element, [edge.absorption_edge*(0.999),
+                                            edge.absorption_edge*(1.001)],
+                                  kind='photo')
                 out[label] = (mu[1]-mu[0]) * eline.intensity * edge.fluorescence_yield
-            except:
-                pass
         return out
 
     def CK_probability(self, element, initial, final, total=True):
