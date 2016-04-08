@@ -430,8 +430,29 @@ class XrayDB(object):
                                                r.initial_level, r.final_level)
         return out
 
+    def xray_line_strengths(self, element):
+        """
+        return the absolute line strength in cm^2/gr for all available lines
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+
+        """
+        out = {}
+        for label, eline in self.xray_lines(element).items():
+            try:
+                edge = self.xray_edge(element, eline.initial_level)
+                mu = self.mu_elam(element, [edge.absorption_edge-2,
+                                            edge.absorption_edge+2], kind='photo')
+                out[label] = (mu[1]-mu[0]) * eline.intensity * edge.fluorescence_yield
+            except:
+                pass
+        return out
+
     def CK_probability(self, element, initial, final, total=True):
-        """return transition probability for an element and initial/final levels
+        """
+        return transition probability for an element and initial/final levels
         """
         if isinstance(element, int):
             element = self.symbol(element)
@@ -451,7 +472,9 @@ class XrayDB(object):
                 return row.transition_probability
 
     def corehole_width(self, element, edge):
-        """returns core hole width for an element and edge"""
+        """
+        returns core hole width for an element and edge
+        """
         tab = KeskiRahkonenKrauseTable
         element = self.zofsym(element)
         rows = self.query(tab).filter(
@@ -530,6 +553,7 @@ class XrayDB(object):
             xsec += calc(element, energies, kind='incoh')
 
         return xsec
+
 
     def coherent_cross_section_elam(self, element, energies):
         """returns coherenet scattering cross section for an element
