@@ -460,17 +460,24 @@ class XrayDB(object):
                                                r.initial_level, r.final_level)
         return out
 
-    def xray_line_strengths(self, element):
+    def xray_line_strengths(self, element, excitation_energy=None):
         """
         return the absolute line strength in cm^2/gr for all available lines
 
-        arguments
-        ---------
-        element:  atomic number, atomic symbol for element
+        Parameters
+        ----------
+        element:  int or string
+            atomic number, atomic symbol for element
+        excitation_energy: Float
+            incident energy at eV
 
+        Returns
+        -------
+        dict:
+            elemental line with fluorescence cross section in cm2/gr.
         """
         out = {}
-        for label, eline in self.xray_lines(element).items():
+        for label, eline in self.xray_lines(element, excitation_energy=excitation_energy).items():
             edge = self.xray_edge(element, eline.initial_level)
             if edge is None and ',' in eline.initial_level:
                 ilevel, extra = eline.initial_level.split(',')
