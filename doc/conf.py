@@ -17,11 +17,20 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.append(os.path.abspath('.'))
 
+sys.path.insert(0, os.path.abspath(os.path.join('sphinx', 'ext')))
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.pngmath']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.pngmath',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.extlinks',
+              'natbib',  ##  NOTE:  Requires pybtex! (pip install pybtex)
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -72,6 +81,17 @@ add_function_parentheses = True
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
 add_module_names = True
+
+
+# configures bibliography,
+# see for reference: http://wnielson.bitbucket.org/projects/sphinx-natbib/
+natbib = {'file': 'xraydb.bib',
+          'brackets': '[]',
+          'separator': ',',
+          'style': 'authors',
+          'sort': False}
+
+
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
