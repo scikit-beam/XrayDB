@@ -24,3 +24,4 @@ even easier interface to these data.
 
    installation
    python
+   xraydb
