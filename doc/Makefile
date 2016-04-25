@@ -1,9 +1,8 @@
 # Makefile for Sphinx documentation
 #
-# You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-PAPER         =
+PAPER         = letter
 BUILDDIR      = _build
 
 # Internal variables.
@@ -11,20 +10,24 @@ PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest latexpdf
-.PHONY: all install
+.PHONY: help clean html dirhtml pickle json htmlhelp qthelp latex changes linkcheck doctest pdf
+.PHONY: all install biblio
 
-html:
+html: biblio
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-xraydb.pdf: latex
+epub: biblio
+	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/html
+
+
+pdf: latex
 	cd $(BUILDDIR)/latex && make all-pdf
 	cp -pr $(BUILDDIR)/latex/xraydb.pdf ./xraydb.pdf
 
-all: html xraydb.pdf
+all: html pdf
 
+biblio:
+	touch biblio.rst
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
