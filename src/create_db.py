@@ -93,9 +93,9 @@ def add_Waasmaier(dest, append=True):
     conn.commit()
     c.close()
 
-def add_Chantler(dest, append=True):
+def add_Chantler(dest, append=True, table='Chantler', subdir='fine', suffix='.dat'):
     """add f' / f'', mu data from Chantler"""
-    dirname = 'chantler'
+    dirname = os.path.join('chantler', subdir)
 
     if os.path.exists(dest) and not append:
         raise IOError('File "%s" already exists -- cannot add f0 data')
@@ -103,12 +103,12 @@ def add_Chantler(dest, append=True):
     conn = sqlite3.connect(dest)
     c = conn.cursor()
     c.execute(
-        '''create table Chantler (id integer primary key,
+        '''create table %s (id integer primary key,
         element text, sigma_mu real, mue_f2 real, density real,
         corr_henke float, corr_cl35 float, corr_nucl float,
         energy text, f1 text, f2 text, mu_photo text,
         mu_incoh text, mu_total text)
-        ''')
+        ''' % table)
 
     args = '(%s)' % ','.join(['?']*14)
 
@@ -153,7 +153,9 @@ def add_Chantler(dest, append=True):
             mu_incoh.append(words[4])
             mu_total.append(words[5])
 
-        c.execute('insert into Chantler values %s' % args,
+        query = 'insert into %s values %%s' % table
+
+        c.execute(query % args,
                   (z, elem, sigma_mu, mue_f2, density,
                    corr_henke, corr_cl35, corr_nucl,
                    json.dumps(en), json.dumps(f1), json.dumps(f2),
@@ -786,4 +788,5 @@ if __name__ == '__main__':
     add_Elam(dest, overwrite=args.force, silent=args.silent)
     add_Waasmaier(dest, append=True)
     add_KeskiRahkonen_Krause(dest, append=True)
-    add_Chantler(dest, append=True)
+    add_Chantler(dest, table='Chantler_coarse', subdir='coarse', append=True)
+    add_Chantler(dest, table='Chantler',        subdir='fine',   append=True)
