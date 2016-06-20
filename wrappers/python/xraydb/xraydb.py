@@ -506,14 +506,15 @@ class XrayDB(object):
             initial_level (string or list/tuple of string):  initial level(s) to
                  limit output.
             excitation_energy (float): energy of excitation, limit output those
-<                 excited by X-rays of this energy (in eV).
+                 excited by X-rays of this energy (in eV).
 
         Returns:
             dict with keys of lines (iupac symbol) and values of Xray Lines
 
-        Note:
+        Notes:
             if both excitation_energy and initial_level are given, excitation_level
             will limit output
+
         """
         element = self.symbol(element)
         tab = XrayTransitionsTable
