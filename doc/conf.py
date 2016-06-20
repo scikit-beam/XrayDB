@@ -29,6 +29,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath',
               'sphinx.ext.mathjax',
               'sphinx.ext.extlinks',
+              'sphinxcontrib.napoleon',
+              'sphinxcontrib.argdoc',
               'natbib',  ##  NOTE:  Requires pybtex! (pip install pybtex)
               ]
 
