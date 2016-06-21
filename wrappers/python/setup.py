@@ -29,12 +29,13 @@ check_dependencies(required_modules)
 shutil.copy(os.path.join('..', '..', dbfile),
             os.path.join('xraydb', dbfile))
 
+from xraydb import __version__
 setup(name = 'xraydb',
-      version = '1.0.1',
+      version = __version__,
       author = 'Matthew Newville',
       author_email = 'newville@cars.uchicago.edu',
-      url          = 'http://github.com/XraySpectroscopy/XrayDB',
-      download_url = 'http://github.com/XraySpectroscopy/XrayDB',
+      url          = 'http://github.com/scikit-beam/XrayDB',
+      download_url = 'http://github.com/scikit-beam/XrayDB',
       requires = ('numpy', 'sqlalchemy'),
       license = 'BSD',
       description = "X-ray Reference Data for the Elements",
