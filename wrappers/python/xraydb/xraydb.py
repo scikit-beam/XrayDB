@@ -23,8 +23,11 @@ import sqlalchemy.dialects.sqlite
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
                            'final_level'))
-CoreHoleWidth = namedtuple('CoreHoleWidth', ('Z', 'edge', 'width'))
 ElementData = namedtuple('ElementData', ('Z', 'symbol', 'mass', 'density'))
+
+
+__version__ = '1.1'
+
 
 def as_ndarray(obj):
     """make sure a float, int, list of floats or ints,
@@ -40,10 +43,13 @@ def make_engine(dbname):
 
 def isxrayDB(dbname):
     """
-    return whehter a file is a valid scan database:
+    return whether a file is a valid XrayDB database
 
     Parameters:
-        dbname (string): name of Xray DB file
+        dbname (string): name of XrayDB file
+
+    Returns:
+        bool: is file a valid XrayDB
 
     Notes:
         must be a sqlite db file, with tables named 'elements',
@@ -84,7 +90,7 @@ def elam_spline(xin, yin, yspl_in, x):
         x (float or ndarray): x values to be evaluated at
 
     Returns:
-        ndarray of interpolated values
+        ndarray: interpolated values
     """
     x = as_ndarray(x)
     x[np.where(x < min(xin))] =  min(xin)
@@ -169,7 +175,18 @@ class ChantlerTable(_BaseTable):
      energy, f1, f2, mu_photo, mu_incoh, mu_total) = [None]*14
 
 class XrayDB(object):
-    "interface to Xray Data"
+    """
+    Database of Atomic and X-ray Data
+
+    This XrayDB object gives methods to access the Atomic and
+    X-ray data in th SQLite3 database xraydb.sqlite.
+
+    Much of the data in this database comes from the compilation
+    of Elam, Ravel, and Sieber, with additional data from Chantler,
+    and other sources. See the documention and bibliography for
+    a complete listing.
+    """
+
     def __init__(self, dbname='xraydb.sqlite', read_only=True):
         "connect to an existing database"
         if not os.path.exists(dbname):
@@ -221,26 +238,56 @@ class XrayDB(object):
         "generic query"
         return self.session.query(*args, **kws)
 
+    def get_version(self, long=False, with_history=False):
+        """
+        return sqlite3 database and python library version numbers
+
+        Parameters:
+            long (bool): show timestamp and notes of latest version [False]
+            with_history (bool): show complete version history [False]
+
+        Returns:
+            string: version information
+        """
+        out = []
+        rows = self.tables['Version'].select().execute().fetchall()
+        if not with_history:
+            rows = rows[-1:]
+        if long or with_history:
+            for row in rows:
+                out.append("XrayDB Version: %s [%s] '%s'" % (row.tag,
+                                                             row.date,
+                                                             row.notes))
+            out.append("Python Version: %s" % __version__)
+            return "\n".join(out)
+        else:
+            return "XrayDB Version: %s, Python Version: %s" % (rows[0].tag,
+                                                               __version__)
+
+
     def f0_ions(self, element=None):
         """
-        return list of ion names supported for the .f0() calculation
-        from Waasmaier and Kirfel
+        return list of ion names supported for the .f0() function.
+
 
         Parameters:
             element (string, int, pr None):  atomic number, symbol, or ionic symbol
                     of scattering element.
 
         Returns:
-            if element is None, all 211 ions are returned.
-            if element is not None, the ions for that element are returned
+            list:  if element is None, all 211 ions are returned.
+                   if element is not None, the ions for that element are returned
 
         Example:
-             >>> xdb = XrayDB()
-             >>> xdb.f0_ions('Fe')
-             ['Fe', 'Fe2+', 'Fe3+']
+            >>> xdb = XrayDB()
+            >>> xdb.f0_ions('Fe')
+            ['Fe', 'Fe2+', 'Fe3+']
 
         Notes:
-           Z values from 1 to 98 (and symbols 'H' to 'Cf') are supported.
+            Z values from 1 to 98 (and symbols 'H' to 'Cf') are supported.
+
+        References:
+            Waasmaier and Kirfel
         """
         rows = self.query(WaasmaierTable)
         if element is not None:
@@ -257,11 +304,22 @@ class XrayDB(object):
             q (float, list, ndarray): value(s) of q for scattering factors
 
         Returns:
-            ndarray of elastic scattering factors
+            ndarray: elastic scattering factors
+
+
+        Example:
+            >>> xdb = XrayDB()
+            >>> xdb.f0('Fe', range(10))
+            array([ 25.994603  ,   6.55945765,   3.21048827,   1.65112769,
+                     1.21133507,   1.0035555 ,   0.81012185,   0.61900285,
+                     0.43883403,   0.27673021])
 
         Notes:
-            q = sin(theta) / lambda, where theta = incident angle, and
-            lambda = X-ray wavelength
+            q = sin(theta) / lambda, where theta = incident angle,
+            and lambda = X-ray wavelength
+
+        References:
+            Waasmaier and Kirfel
         """
         tab = WaasmaierTable
         row = self.query(tab)
@@ -328,7 +386,10 @@ class XrayDB(object):
             emax (float): maximum energy (in eV) [1.e9]
 
         Returns:
-            ndarray of energies
+            ndarray: energies
+
+        References:
+            Chantler
         """
         tab = ChantlerTable
         row = self.query(tab).filter(tab.element==self.symbol(element)).all()
@@ -361,7 +422,10 @@ class XrayDB(object):
             energy (float or ndarray): energies (in eV).
 
         Returns:
-            ndarray of anomalous scattering factor
+            ndarray: real part of anomalous scattering factor
+
+        References:
+            Chantler
         """
         return self._getChantler(element, energy, column='f1', **kws)
 
@@ -375,7 +439,10 @@ class XrayDB(object):
             energy (float or ndarray): energies (in eV).
 
         Returns:
-            ndarray of anomalous scattering factor
+            ndarray: imaginary part of anomalous scattering factor
+
+        References:
+            Chantler
         """
         return self._getChantler(element, energy, column='f2', **kws)
 
@@ -392,7 +459,10 @@ class XrayDB(object):
             incoh (bool): return only the incoherent contribution [False]
 
         Returns:
-            ndarray of mass attenuation coefficient.
+            ndarray: mass attenuation coefficient in cm^2/gr
+
+        References:
+            Chantler
         """
         col = 'mu_total'
         if photo:
@@ -421,7 +491,7 @@ class XrayDB(object):
             element (string or int): atomic number or symbol
 
         Returns:
-            atomic number (integer)
+            integer: atomic number
         """
         return self._getElementData(element).Z
 
@@ -433,7 +503,7 @@ class XrayDB(object):
             element (string or int): atomic number or symbol
 
         Returns:
-            element symbol (string)
+            string: element symbol
         """
         return self._getElementData(element).symbol
 
@@ -445,7 +515,7 @@ class XrayDB(object):
             element (string or int): atomic number or symbol
 
         Returns:
-            molar mass of element (float) in amu
+            float: molar mass of element in amu
         """
         return self._getElementData(element).mass
 
@@ -457,8 +527,8 @@ class XrayDB(object):
             element (string or int): atomic number or symbol
 
         Returns:
-            density of element (float) in grams/cm^3
-       """
+            float: density of element in gr/cm^3
+        """
         return self._getElementData(element).density
 
     def xray_edges(self, element):
@@ -470,8 +540,11 @@ class XrayDB(object):
             element (string or int): atomic number or symbol
 
         Returns:
-            dictionary with keys of edge (iupac symbol), and values of
-            XrayEdge (namedtuple of (energy, fyield, edge_jump))
+            dictionary:  keys of edge (iupac symbol), and values of
+                         XrayEdge namedtuple of (energy, fyield, edge_jump))
+
+        References:
+           Elam, Ravel, and Sieber.
         """
         element = self.symbol(element)
         tab = XrayLevelsTable
@@ -491,7 +564,15 @@ class XrayDB(object):
             edge (string):  X-ray edge
 
         Returns:
-            XrayEdge (namedtuple of (energy, fyield, edge_jump))
+            XrayEdge:  namedtuple of (energy, fyield, edge_jump))
+
+        Example:
+            >>> xdb = XrayDB()
+            >>> xdb.xray_edge('Co', 'K')
+            XrayEdge(edge=7709.0, fyield=0.381903, jump_ratio=7.796)
+
+        References:
+           Elam, Ravel, and Sieber.
         """
         edges = self.xray_edges(element)
         edge = edge.title()
@@ -509,12 +590,25 @@ class XrayDB(object):
                  excited by X-rays of this energy (in eV).
 
         Returns:
-            dict with keys of lines (iupac symbol) and values of Xray Lines
+            dictionary: keys of lines (iupac symbol), values of Xray Lines
 
         Notes:
             if both excitation_energy and initial_level are given, excitation_level
             will limit output
 
+        Example:
+            >>> xdb = XrayDB()
+            >>> for key, val in xdb.xray_lines('Ga', 'K').items():
+            >>>      print(key, val)
+            'Ka3', XrayLine(energy=9068.0, intensity=0.000326203, initial_level=u'K', final_level=u'L1')
+            'Ka2', XrayLine(energy=9223.8, intensity=0.294438, initial_level=u'K', final_level=u'L2')
+            'Ka1', XrayLine(energy=9250.6, intensity=0.57501, initial_level=u'K', final_level=u'L3')
+            'Kb3', XrayLine(energy=10263.5, intensity=0.0441511, initial_level=u'K', final_level=u'M2')
+            'Kb1', XrayLine(energy=10267.0, intensity=0.0852337, initial_level=u'K', final_level=u'M3')
+            'Kb5', XrayLine(energy=10348.3, intensity=0.000841354, initial_level=u'K', final_level=u'M4,5')
+
+        References:
+           Elam, Ravel, and Sieber.
         """
         element = self.symbol(element)
         tab = XrayTransitionsTable
@@ -545,8 +639,10 @@ class XrayDB(object):
             excitation_energy (float): incident energy, in eV
 
         Returns:
-            dict of elemental line with fluorescence cross section in cm2/gr.
+            dictionary: elemental line with fluorescence cross section in cm2/gr.
 
+        References:
+           Elam, Ravel, and Sieber.
         """
         out = {}
         for label, eline in self.xray_lines(element, excitation_energy=excitation_energy).items():
@@ -555,10 +651,9 @@ class XrayDB(object):
                 ilevel, extra = eline.initial_level.split(',')
                 edge = self.xray_edge(element, ilevel)
             if edge is not None:
-                mu = self.mu_elam(element, [edge.absorption_edge*(0.999),
-                                            edge.absorption_edge*(1.001)],
-                                  kind='photo')
-                out[label] = (mu[1]-mu[0]) * eline.intensity * edge.fluorescence_yield
+                mu = self.mu_elam(element, [edge.edge*(0.999),
+                                            edge.edge*(1.001)], kind='photo')
+                out[label] = (mu[1]-mu[0]) * eline.intensity * edge.fyield
         return out
 
     def CK_probability(self, element, initial, final, total=True):
@@ -573,12 +668,15 @@ class XrayDB(object):
             total (bool): whether to return total or partial probability
 
         Returns:
-            float transition probability
+            float: transition probability
 
         Example:
             >>> xdb = XrayDB()
             >>> xdb.CK_probability('Cu', 'L1', 'L3', total=True)
             0.681
+
+        References:
+           Elam, Ravel, and Sieber.
         """
         element = self.symbol(element)
         tab = CosterKronigTable
@@ -594,30 +692,24 @@ class XrayDB(object):
             else:
                 return row.transition_probability
 
-    def corehole_width(self, element=None, edge=None):
+    def corehole_width(self, element, edge):
         """
         returns core hole width for an element and edge
 
         Parameters:
-         element (string, integer, or None): atomic number or symbol for element
-         edge (sring or None): edge for hole.
+            element (string, integer): atomic number or symbol for element
+            edge (string): edge for hole.
 
         Returns:
-          list of named tuples (Z, edge, width) for element and edge
-          with widths in eV.
+            float: corehole width in eV.
 
-        Notes:
-          if edge is None, values for all edges for the element are returned.
-          if element is None, values for all elements are returned.
+        References:
+            Keski-Rahkonen and Krause
         """
         tab = KeskiRahkonenKrauseTable
-        rows = self.query(tab)
-        if element is not None:
-            rows = rows.filter(tab.element==self.symbol(element))
-        if edge is not None:
-            rows = rows.filter(tab.edge==edge.title())
-        return [CoreHoleWidth(r.atomic_number, r.edge, r.width)
-                for r in rows.all()]
+        rows = self.query(tab).filter(tab.element==self.symbol(element))
+        row = rows.filter(tab.edge==edge.title()).all()[0]
+        return row.width
 
     def Elam_CrossSection(self, element, energies, kind='photo'):
         """
@@ -633,7 +725,8 @@ class XrayDB(object):
         Returns:
             ndarray of scattering data
 
-        Data from Elam, Ravel, and Sieber.
+        References:
+            Elam, Ravel, and Sieber.
         """
         element = self.symbol(element)
         energies = 1.0 * as_ndarray(energies)
@@ -680,9 +773,10 @@ class XrayDB(object):
                   total attenuation, respectively.  Default is 'total'.
 
         Returns:
-           ndarray of scattering values in units of cm^2 / gr
+           ndarray of scattering values in units of cm^2/gr
 
-        Data from Elam, Ravel, and Sieber.
+        References:
+            Elam, Ravel, and Sieber.
         """
         calc = self.Elam_CrossSection
         xsec = calc(element, energies, kind='photo')
@@ -701,9 +795,10 @@ class XrayDB(object):
             energies (float or ndarray): energies (in eV) to calculate cross-sections
 
         Returns:
-           values in units of cm^2 / gr
+            float or ndarry: cross section cm^2/gr
 
-        Data from Elam, Ravel, and Sieber.
+        References:
+            Elam, Ravel, and Sieber.
         """
         return self.Elam_CrossSection(element, energies, kind='coh')
 
@@ -718,8 +813,9 @@ class XrayDB(object):
             energies (float or ndarray): energies (in eV) to calculate cross-sections
 
         Returns:
-           values in units of cm^2 / gr
+           float or ndarray: cross section in cm^2/gr
 
-        Data from Elam, Ravel, and Sieber.
+        References:
+            Elam, Ravel, and Sieber.
         """
         return self.Elam_CrossSection(element, energies, kind='incoh')
