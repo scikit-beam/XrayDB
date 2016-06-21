@@ -23,5 +23,5 @@ even easier interface to these data.
    :maxdepth: 2
 
    installation
-   python
    xraydb
+   python
