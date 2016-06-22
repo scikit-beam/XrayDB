@@ -98,7 +98,7 @@ natbib = {'file': 'xraydb.bib',
           'brackets': '[]',
           'separator': ',',
           'style': 'authors',
-          'sort': False}
+          'sort': True}
 
 
 

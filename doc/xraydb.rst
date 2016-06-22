@@ -25,20 +25,11 @@ comes from :cite:ts:`Keski_Krause`, while elastic X-ray scattering data,
 :math:`f_0(q)`,is derived from :cite:ts:`Waasmaier_Kirfel`.  In addition,
 values for absorption cross-sections and anomalous X-ray scattering factors
 from :cite:ts:`Chantler` (as from
-http://www.nist.gov/pml/data/ffast/index.cfm) are available.  Except for
-the anomalous cross-section data from Cromer and Liberman (which is
-implemented using the Fortran routine by Brennan and Cowan with slight
-modifications), the data is accessed through a portable SQLite3 database
-file.  This implementation was originally done by Darren Dale from CHESS
+http://www.nist.gov/pml/data/ffast/index.cfm) are available.
+
+ This implementation was originally done by Darren Dale from CHESS
 (see https://github.com/praxes/elam_physical_reference), with some
 additions and alterations made for this implementation.
-
-
-.. todo::
-     Include anomalous cross-sections are available as based on the work of
-     :cite:ts:`Cromer_Liberman`, using the implementation of
-     :cite:ts:`Brennan_Cowan`.   This requires delivering Fortran-compiled
-     shared libraries.....
 
 
 .. todo::
@@ -46,9 +37,9 @@ additions and alterations made for this implementation.
    Add methods and docs for the EPDL97 data.
 
 
-.. todo::
-
    Add methods and docs from periodictable
+
+
 
 
 X-ray Properties of the Elements
@@ -293,17 +284,6 @@ line names <xraydb-lines_table>`.  Finally, all energies are in eV.
     return X-ray mass attenuation coefficient (:math:`\mu/\rho`) for an element at the
     specified energy values, using the tabulation of Chantler.
 
-.. function:: f1f2_cl(z_or_element, energies, width=None, edge=None)
-
-    return tuple of (f', f''), the real and imaginary anomalous scattering factors for an
-    element at the specified energies, using the calculation scheme of Cromer and
-    Liberman, as implemented by Brennan and Cowan.  The optional argument ``width`` can be
-    used to specify an energy width (in eV) to use to convolve the output with a
-    Lorentzian profile (with ``width`` used as :math:`2\gamma` in the Lorentzian).  If
-    ``edge`` is given ('K', 'L3', etc), the core-level width is looked up from
-    :func:`core_width`, and its value is used.
-
-    Note that both f' and f'' are returned here.
 
 
 
