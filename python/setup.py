@@ -25,9 +25,8 @@ def check_dependencies(modules):
 
 check_dependencies(required_modules)
 
-# copy db from ../.. to xraydb
-shutil.copy(os.path.join('..', '..', dbfile),
-            os.path.join('xraydb', dbfile))
+# copy db from .. to xraydb
+shutil.copy(os.path.join('..', dbfile), os.path.join('xraydb', dbfile))
 
 from xraydb import __version__
 setup(name = 'xraydb',
