@@ -394,7 +394,7 @@ The `Chantler` table holds data for resonant X-ray scattering factors :math:`f'(
 factors from :cite:ts:`Chantler`.  Energies are in eV, and each row represents an
 energy level for an element.
 
-.. index: : Table of resonant scattering and mass attenuation coefficients from Chantler
+.. index:: Table of resonant scattering and mass attenuation coefficients from Chantler
 .. _db_chantler_table:
 
    Table of resonant scattering and mass attenuation coefficients from Chantler.
