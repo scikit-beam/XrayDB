@@ -285,3 +285,146 @@ cross sections.  Each row represents an element.
     +-------------------------------+--------------+---------------------------------------+
     | log_incoherent_scatter_spline |  json array  | log of cross section spline           |
     +-------------------------------+--------------+---------------------------------------+
+
+.. _db_costerkronig_sect:
+
+Coster_Kronig Table
+------------------------
+
+The `Coster_Kronig` table holds data for energy levels, partial and total
+transition probabilites for the Coster-Kronig transitions (Auger processes
+in which the empty core level is filled from an electron in a higher level
+with the same principle quantum number).  The partial probability describes
+direct transitions, while the total probability includes cascade effects.
+Each row represents a transition.
+
+
+.. index:: Table of Coster-Kronig Transitions
+.. _db_costerkronig_table:
+
+   Table of Coster-Kronig Transitions.
+
+    +-------------------------------+--------------+---------------------------------------+
+    |  Column                       |  Type        | Description                           |
+    +===============================+==============+=======================================+
+    |  id                           | integer      | Index (primary key)                   |
+    +-------------------------------+--------------+---------------------------------------+
+    | element                       |  text        | Atomic symbol for element             |
+    +-------------------------------+--------------+---------------------------------------+
+    | initial_level                 |  text        | IUPAC symbol for initial level        |
+    +-------------------------------+--------------+---------------------------------------+
+    | final_level                   |  text        | IUPAC symbol for final level          |
+    +-------------------------------+--------------+---------------------------------------+
+    | transition_probability        |  float       | direct transition probability         |
+    +-------------------------------+--------------+---------------------------------------+
+    | total_transition_probability  |  float       | total transition probability          |
+    +-------------------------------+--------------+---------------------------------------+
+
+.. _db_waasmaier_sect:
+
+Waasmaier Table
+------------------------
+
+The `Waasmaier` table holds data for calculating elastic X-ray scattering cross sections,
+:math:`f_0(q)`, from :cite:ts:`Waasmaier_Kirfel`.  The data are available for many common
+oxidataion states for each element.  Each row represents an ion.
+
+.. index:: Table of Elastic Scattering Cross Section Coefficients
+.. _db_waasmaier_table:
+
+   Table of Elastic Scattering Cross Section Coefficients
+
+    +-------------------------------+--------------+---------------------------------------+
+    |  Column                       |  Type        | Description                           |
+    +===============================+==============+=======================================+
+    |  id                           | integer      | Index (primary key)                   |
+    +-------------------------------+--------------+---------------------------------------+
+    |  atomic_number                | integer      | Atomic Number, Z                      |
+    +-------------------------------+--------------+---------------------------------------+
+    | element                       |  text        | Atomic symbol for element             |
+    +-------------------------------+--------------+---------------------------------------+
+    | ion                           |  text        | symbol for element and ionization     |
+    +-------------------------------+--------------+---------------------------------------+
+    | offset                        |  float       | offset value                          |
+    +-------------------------------+--------------+---------------------------------------+
+    | scale                         |  json array  | coefficients for calculation          |
+    +-------------------------------+--------------+---------------------------------------+
+    | exponents                     |  json array  | coefficients for calculation          |
+    +-------------------------------+--------------+---------------------------------------+
+
+
+.. _db_keski_sect:
+
+KeskiRahkonen_Krause Table
+------------------------------
+
+The `KeskiRahkonen_Krause` table holds data for energy widths of the core electronic
+levels from :cite:ts:`Keski_Krause`.  Values are in eV, and each row represents an
+energy level for an element.
+
+.. index:: Table of Core Hole Widths
+.. _db_keski_table:
+
+   Table of Core Hole Widths
+
+    +-------------------------------+--------------+---------------------------------------+
+    |  Column                       |  Type        | Description                           |
+    +===============================+==============+=======================================+
+    |  id                           | integer      | Index (primary key)                   |
+    +-------------------------------+--------------+---------------------------------------+
+    |  atomic_number                | integer      | Atomic Number, Z                      |
+    +-------------------------------+--------------+---------------------------------------+
+    | element                       |  text        | Atomic symbol for element             |
+    +-------------------------------+--------------+---------------------------------------+
+    | edge                          |  text        | IUPAC symbol for energy level ('K')   |
+    +-------------------------------+--------------+---------------------------------------+
+    | width                         |  float       | width of level (eV)                   |
+    +-------------------------------+--------------+---------------------------------------+
+
+
+
+
+.. _db_chantler_sect:
+
+Chantler Table
+------------------------------
+
+The `Chantler` table holds data for resonant X-ray scattering factors :math:`f'(E)` and
+:math:`f''(E)` as well as photo-electric absorption, coherent, and incoherent scattering
+factors from :cite:ts:`Chantler`.  Energies are in eV, and each row represents an
+energy level for an element.
+
+.. index:: Table of Core Hole Widths
+.. _db_chantler_table:
+
+   Table of Core Hole Widths
+
+    +-------------------------------+--------------+---------------------------------------+
+    |  Column                       |  Type        | Description                           |
+    +===============================+==============+=======================================+
+    |  id                           | integer      | Index (primary key)                   |
+    +-------------------------------+--------------+---------------------------------------+
+    | element                       |  text        | Atomic symbol for element             |
+    +-------------------------------+--------------+---------------------------------------+
+    | mue_f2                        |  float       | factor to convert mu(E) to f''(E)     |
+    +-------------------------------+--------------+---------------------------------------+
+    | density                       |  float       | atomic density (gr/cm^3)              |
+    +-------------------------------+--------------+---------------------------------------+
+    | corr_henke                    |  float       | Henke correction to f`(E)             |
+    +-------------------------------+--------------+---------------------------------------+
+    | corr_cl35                     |  float       | Cromer-Liberman correction to f`(E)   |
+    +-------------------------------+--------------+---------------------------------------+
+    | corr_nucl                     |  float       | nuclear correction to f`(E)           |
+    +-------------------------------+--------------+---------------------------------------+
+    | energy                        |  json array  | energies for interpolation            |
+    +-------------------------------+--------------+---------------------------------------+
+    | f1                            |  json array  | f'(E)    (e)                          |
+    +-------------------------------+--------------+---------------------------------------+
+    | f2                            |  json array  | f''(E)   (e)                          |
+    +-------------------------------+--------------+---------------------------------------+
+    | mu_photo                      |  json array  | photoabsorption mu(E)  (cm^2/gr)      |
+    +-------------------------------+--------------+---------------------------------------+
+    | mu_incoh                      |  json array  | incoherent scattering  (cm^2/gr)      |
+    +-------------------------------+--------------+---------------------------------------+
+    | mu_total                      |  json array  | total attenuation (cm^2/gr)           |
+    +-------------------------------+--------------+---------------------------------------+
