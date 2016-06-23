@@ -292,7 +292,7 @@ Coster_Kronig Table
 ------------------------
 
 The `Coster_Kronig` table holds data for energy levels, partial and total
-transition probabilites for the Coster-Kronig transitions (Auger processes
+transition probabilities for the Coster-Kronig transitions (Auger processes
 in which the empty core level is filled from an electron in a higher level
 with the same principle quantum number).  The partial probability describes
 direct transitions, while the total probability includes cascade effects.
@@ -327,7 +327,7 @@ Waasmaier Table
 
 The `Waasmaier` table holds data for calculating elastic X-ray scattering cross sections,
 :math:`f_0(q)`, from :cite:ts:`Waasmaier_Kirfel`.  The data are available for many common
-oxidataion states for each element.  Each row represents an ion.
+oxidation states for each element.  Each row represents an ion.
 
 .. index:: Table of Elastic Scattering Cross Section Coefficients
 .. _db_waasmaier_table:

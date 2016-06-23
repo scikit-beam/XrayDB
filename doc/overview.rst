@@ -21,7 +21,7 @@ AMU.
 X-ray Edges
 --------------
 
-Several resoures (database tables, python methods) take either an ``edge``
+Several resources (database tables, python methods) take either an ``edge``
 or a ``level`` argument to signify a core electronic level.  These must be
 one of the levels listed in the :ref:`Table of X-ray edge names
 <xraydb-edge_table>`.
