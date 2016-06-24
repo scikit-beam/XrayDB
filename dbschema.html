@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1',
+        VERSION:     '1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -204,7 +204,7 @@ data are stored in the database as text of JSON-encoded arrays.</p>
 <p>The <cite>Version</cite> table holds data about the revisions to the database file
 itself.  Each row represents a single revision.</p>
 <blockquote id="db-version-table">
-<span id="index-0"></span><div><p>Table of Database Versions</p>
+<span id="index-0"></span><div><p>DB Table of Database Versions</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -245,7 +245,7 @@ itself.  Each row represents a single revision.</p>
 <p>The <cite>elements</cite> table holds basic data about each element.  Each row
 represents an element.</p>
 <blockquote id="db-elements-table">
-<span id="index-1"></span><div><p>Table of Basic Properties of the Elements</p>
+<span id="index-1"></span><div><p>DB Table of Basic Properties of the Elements</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -286,11 +286,12 @@ represents an element.</p>
 <p>The <cite>xray_levels</cite> table holds data for electronic levels of atoms.  Each row
 represents a core electronic level.</p>
 <blockquote id="db-xray-levels-table">
-<span id="index-2"></span><div><p>Table of X-ray and core electronic levels.  <cite>fluorescence yield</cite> gives the
-probability of an empty level refilling by X-ray fluorescence. The <cite>jump
-ratio</cite> is the ratio of values for photo-electric cross section (that is, from
-<a class="reference internal" href="#db-photoabsorption-sect"><span>Photoabsorption Table</span></a>) 1 eV above the absorption edge to that 1 eV
-below the absorption edge.  See <a class="reference internal" href="overview.html#xraydb-edge-table"><span>Table of X-ray Edges</span></a></p>
+<span id="index-2"></span><div><p>DB Table of X-ray and core electronic levels.  <cite>fluorescence yield</cite>
+gives the probability of an empty level refilling by X-ray
+fluorescence. The <cite>jump ratio</cite> is the ratio of values for photo-electric
+cross section (that is, from <a class="reference internal" href="#db-photoabsorption-sect"><span>Photoabsorption Table</span></a>) 1 eV above
+the absorption edge to that 1 eV below the absorption edge.  See
+<a class="reference internal" href="overview.html#xraydb-edge-table"><span>Table of X-ray Edges</span></a></p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -339,7 +340,7 @@ below the absorption edge.  See <a class="reference internal" href="overview.htm
 <p>The <cite>xray_transitions</cite> table holds data for transitions between electronic levels
 of atoms.  Each row represents a transition between two levels.</p>
 <blockquote id="db-xray-trans-table">
-<span id="index-3"></span><div><p>Table of X-ray Transitions.  Both IUPAC and Siegbahn symbols are given (see
+<span id="index-3"></span><div><p>DB Table of X-ray Transitions.  Both IUPAC and Siegbahn symbols are given (see
 <a class="reference internal" href="overview.html#xraydb-lines-table"><span>Table of X-ray emission lines</span></a>), as
 well as the initial and final levels.  The <cite>intensity</cite> is the relative
 intensity of the transition for a given <cite>initial level</cite>.</p>
@@ -397,9 +398,9 @@ intensity of the transition for a given <cite>initial level</cite>.</p>
 <div class="section" id="photoabsorption-table">
 <span id="db-photoabsorption-sect"></span><h2>Photoabsorption Table<a class="headerlink" href="#photoabsorption-table" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>photoabsorption</cite> table holds data for the photo-electric absorption
-cross sections.  Each row represents an element.</p>
+cross sections in cm^2/gr.  Each row represents an element.</p>
 <blockquote id="db-photoabsorption-table">
-<span id="index-4"></span><div><p>Table of Photoabsorption Cross Sections.  JSON-encoded arrays are held
+<span id="index-4"></span><div><p>DB Table of Photoabsorption Cross Sections.  JSON-encoded arrays are held
 for logs of energy, cross section, and cross section spline (second
 derivative useful for spline interpolation).</p>
 <blockquote>
@@ -444,9 +445,9 @@ derivative useful for spline interpolation).</p>
 <div class="section" id="scattering-table">
 <span id="db-scattering-sect"></span><h2>Scattering Table<a class="headerlink" href="#scattering-table" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>scattering</cite> table holds data for the coherent and incoherent X-ray scattering
-cross sections.  Each row represents an element.</p>
+cross sections, in cm^2/gr.  Each row represents an element.</p>
 <blockquote id="db-scattering-table">
-<span id="index-5"></span><div><p>Table of Coherent and Incoherent Scattering Cross Sections.  JSON-encoded
+<span id="index-5"></span><div><p>DB Table of Coherent and Incoherent Scattering Cross Sections.  JSON-encoded
 arrays are held for logs of energy, cross section, and cross section spline
 (second derivative useful for spline interpolation).</p>
 <blockquote>
@@ -499,13 +500,13 @@ arrays are held for logs of energy, cross section, and cross section spline
 <div class="section" id="coster-kronig-table">
 <span id="db-costerkronig-sect"></span><h2>Coster_Kronig Table<a class="headerlink" href="#coster-kronig-table" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>Coster_Kronig</cite> table holds data for energy levels, partial and total
-transition probabilites for the Coster-Kronig transitions (Auger processes
+transition probabilities for the Coster-Kronig transitions (Auger processes
 in which the empty core level is filled from an electron in a higher level
 with the same principle quantum number).  The partial probability describes
 direct transitions, while the total probability includes cascade effects.
 Each row represents a transition.</p>
 <blockquote id="db-costerkronig-table">
-<span id="index-6"></span><div><p>Table of Coster-Kronig Transitions.</p>
+<span id="index-6"></span><div><p>DB Table of Coster-Kronig Transitions.</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -551,11 +552,14 @@ Each row represents a transition.</p>
 </div>
 <div class="section" id="waasmaier-table">
 <span id="db-waasmaier-sect"></span><h2>Waasmaier Table<a class="headerlink" href="#waasmaier-table" title="Permalink to this headline">¶</a></h2>
-<p>The <cite>Waasmaier</cite> table holds data for calculating elastic X-ray scattering cross sections,
-<span class="math">\(f_0(q)\)</span>, from <span class="citation"><a class="reference internal" href="biblio.html#citation-waasmaier-kirfel">Waasmaier and Kirfel</a><span> </span><span>[</span><a class="reference internal" href="biblio.html#citation-waasmaier-kirfel">4</a><span>]</span></span>.  The data are available for many common
-oxidataion states for each element.  Each row represents an ion.</p>
+<p>The <cite>Waasmaier</cite> table holds data for calculating elastic X-ray scattering
+factors <span class="math">\(f_0(k)\)</span>, from <span class="citation"><a class="reference internal" href="biblio.html#citation-waasmaier-kirfel">Waasmaier and Kirfel</a><span> </span></span>.  The scattering
+factor is unitless, and <span class="math">\(k=\sin(\theta)/\lambda\)</span> where <span class="math">\(\theta\)</span>
+is the scattering angle and <span class="math">\(\lambda\)</span> is the X-ray wavelength.
+available for many common ionic states for each element.  Each row
+represents an ion.</p>
 <blockquote id="db-waasmaier-table">
-<span id="index-7"></span><div><p>Table of Elastic Scattering Cross Section Coefficients</p>
+<span id="index-7"></span><div><p>DB Table of Elastic Scattering Cross Section Coefficients</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -606,10 +610,10 @@ oxidataion states for each element.  Each row represents an ion.</p>
 <div class="section" id="keskirahkonen-krause-table">
 <span id="db-keski-sect"></span><h2>KeskiRahkonen_Krause Table<a class="headerlink" href="#keskirahkonen-krause-table" title="Permalink to this headline">¶</a></h2>
 <p>The <cite>KeskiRahkonen_Krause</cite> table holds data for energy widths of the core electronic
-levels from <span class="citation"><a class="reference internal" href="biblio.html#citation-keski-krause">Keski-Rahkonen and Krause</a><span> </span><span>[</span><a class="reference internal" href="biblio.html#citation-keski-krause">3</a><span>]</span></span>.  Values are in eV, and each row represents an
+levels from <span class="citation"><a class="reference internal" href="biblio.html#citation-keski-krause">Keski-Rahkonen and Krause</a><span> </span></span>.  Values are in eV, and each row represents an
 energy level for an element.</p>
 <blockquote id="db-keski-table">
-<span id="index-8"></span><div><p>Table of Core Hole Widths</p>
+<span id="index-8"></span><div><p>DB Table of Core Hole Widths</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -651,12 +655,13 @@ energy level for an element.</p>
 </div>
 <div class="section" id="chantler-table">
 <span id="db-chantler-sect"></span><h2>Chantler Table<a class="headerlink" href="#chantler-table" title="Permalink to this headline">¶</a></h2>
-<p>The <cite>Chantler</cite> table holds data for resonant X-ray scattering factors <span class="math">\(f'(E)\)</span> and
-<span class="math">\(f''(E)\)</span> as well as photo-electric absorption, coherent, and incoherent scattering
-factors from <span class="citation"><a class="reference internal" href="biblio.html#citation-chantler">Chanter</a><span> </span><span>[</span><a class="reference internal" href="biblio.html#citation-chantler">1</a><span>]</span></span>.  Energies are in eV, and each row represents an
-energy level for an element.</p>
+<p>The <cite>Chantler</cite> table holds data for resonant X-ray scattering factors
+<span class="math">\(f'(E)\)</span> and <span class="math">\(f''(E)\)</span> as well as photo-electric absorption,
+coherent, and incoherent scattering factors from <span class="citation"><a class="reference internal" href="biblio.html#citation-chantler">Chantler</a><span> </span></span>.  As
+with other tables, scattering factors are unitless, and cross sections are
+in cm^2/gr. Each row represents an element.</p>
 <blockquote id="db-chantler-table">
-<span id="index-9"></span><div><p>Table of resonant scattering and mass attenuation coefficients from Chantler.</p>
+<span id="index-9"></span><div><p>DB Table of resonant scattering and mass attenuation coefficients from Chantler.</p>
 <blockquote>
 <div><table border="1" class="docutils">
 <colgroup>
@@ -756,7 +761,7 @@ energy level for an element.</p>
     </div>
     <div class="footer" role="contentinfo">
         &copy; Copyright Matthew Newville, The University of Chicago, 2016.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>

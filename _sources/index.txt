@@ -17,13 +17,13 @@ For reference, see http://json.org.
 
 The project began with the data from the compilation of basic atomic
 properties and X-ray absorption edge energies, emission energies, and
-absorption cross sections from :cite:ts:`Elam_etal`, who assembled data
+absorption cross sections from :cite:author:`Elam_etal`, who assembled data
 from a several sources.  More data has since been added additional sources.
 Energy widths of core holes for excited electronic levels from
-:cite:ts:`Keski_Krause` is included.  Elastic X-ray scattering data,
-:math:`f_0(q)` is taken from :cite:ts:`Waasmaier_Kirfel`.  Resonant
+:cite:author:`Keski_Krause` is included.  Elastic X-ray scattering data,
+:math:`f_0(q)` is taken from :cite:author:`Waasmaier_Kirfel`.  Resonant
 scattering cross sections :math:`f'(E)` and :math:`f''(E)` and absorption
-cross sections from :cite:ts:`Chantler` (as from
+cross sections from :cite:author:`Chantler` (as from
 http://www.nist.gov/pml/data/ffast/index.cfm) are also included.
 
 In general, cross sections are in cm^2/gr, and energies are given in eV.
