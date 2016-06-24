@@ -26,7 +26,7 @@ XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
 ElementData = namedtuple('ElementData', ('Z', 'symbol', 'mass', 'density'))
 
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 
 def as_ndarray(obj):
@@ -336,7 +336,7 @@ class XrayDB(object):
                 f0 += s * np.exp(-e*q*q)
             return f0
 
-    def _getChantler(self, element, energy, column='f1', smoothing=1):
+    def _from_chantler(self, element, energy, column='f1', smoothing=1):
         """
         return energy-dependent data from Chantler table
 
@@ -427,7 +427,7 @@ class XrayDB(object):
         References:
             Chantler
         """
-        return self._getChantler(element, energy, column='f1', **kws)
+        return self._from_chantler(element, energy, column='f1', **kws)
 
     def f2_chantler(self, element, energy, **kws):
         """
@@ -444,7 +444,7 @@ class XrayDB(object):
         References:
             Chantler
         """
-        return self._getChantler(element, energy, column='f2', **kws)
+        return self._from_chantler(element, energy, column='f2', **kws)
 
     def mu_chantler(self, element, energy, incoh=False, photo=False):
         """
@@ -469,9 +469,9 @@ class XrayDB(object):
             col = 'mu_photo'
         elif incoh:
             col = 'mu_incoh'
-        return self._getChantler(element, energy, column=col)
+        return self._from_chantler(element, energy, column=col)
 
-    def _getElementData(self, element):
+    def _elem_data(self, element):
         "return data from elements table: internal use"
         elem = ElementsTable.element
         if isinstance(element, int):
@@ -483,7 +483,7 @@ class XrayDB(object):
                            row.element.title(),
                            row.molar_mass, row.density)
 
-    def zofsym(self, element):
+    def atomic_number(self, element):
         """
         return element's atomic number
 
@@ -493,7 +493,7 @@ class XrayDB(object):
         Returns:
             integer: atomic number
         """
-        return self._getElementData(element).Z
+        return self._elem_data(element).Z
 
     def symbol(self, element):
         """
@@ -505,7 +505,7 @@ class XrayDB(object):
         Returns:
             string: element symbol
         """
-        return self._getElementData(element).symbol
+        return self._elem_data(element).symbol
 
     def molar_mass(self, element):
         """
@@ -517,7 +517,7 @@ class XrayDB(object):
         Returns:
             float: molar mass of element in amu
         """
-        return self._getElementData(element).mass
+        return self._elem_data(element).mass
 
     def density(self, element):
         """
@@ -529,7 +529,7 @@ class XrayDB(object):
         Returns:
             float: density of element in gr/cm^3
         """
-        return self._getElementData(element).density
+        return self._elem_data(element).density
 
     def xray_edges(self, element):
         """
@@ -656,7 +656,7 @@ class XrayDB(object):
                 out[label] = (mu[1]-mu[0]) * eline.intensity * edge.fyield
         return out
 
-    def CK_probability(self, element, initial, final, total=True):
+    def ck_probability(self, element, initial, final, total=True):
         """
         return Coster-Kronig transition probability for an element and
         initial/final levels
@@ -711,7 +711,7 @@ class XrayDB(object):
         row = rows.filter(tab.edge==edge.title()).all()[0]
         return row.width
 
-    def Elam_CrossSection(self, element, energies, kind='photo'):
+    def cross_section_elam(self, element, energies, kind='photo'):
         """
         returns Elam Cross Section values for an element and energies
 
@@ -778,44 +778,9 @@ class XrayDB(object):
         References:
             Elam, Ravel, and Sieber.
         """
-        calc = self.Elam_CrossSection
+        calc = self.cross_section_elam
         xsec = calc(element, energies, kind='photo')
         if kind.lower().startswith('tot'):
             xsec += calc(element, energies, kind='coh')
             xsec += calc(element, energies, kind='incoh')
         return xsec
-
-    def coherent_cross_section_elam(self, element, energies):
-        """
-        returns coherenet scattering cross section for an element
-        at energies (in eV)
-
-        Parameters:
-            element (string or int):  atomic number or symbol for element
-            energies (float or ndarray): energies (in eV) to calculate cross-sections
-
-        Returns:
-            float or ndarry: cross section cm^2/gr
-
-        References:
-            Elam, Ravel, and Sieber.
-        """
-        return self.Elam_CrossSection(element, energies, kind='coh')
-
-    def incoherent_cross_section_elam(self, element, energies):
-        """
-        returns incoherenet scattering cross section for an element
-        at energies (in eV)
-
-
-        Parameters:
-            element (string or int):  atomic number or symbol for element
-            energies (float or ndarray): energies (in eV) to calculate cross-sections
-
-        Returns:
-           float or ndarray: cross section in cm^2/gr
-
-        References:
-            Elam, Ravel, and Sieber.
-        """
-        return self.Elam_CrossSection(element, energies, kind='incoh')
