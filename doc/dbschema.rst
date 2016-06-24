@@ -28,71 +28,71 @@ database, and how to access it.  The schema for the current version (2)
 looks like this::
 
     TABLE Version (id integer primary key,
-                   tag text,
-                   date text,
-                   notes text);
+		   tag text,
+		   date text,
+		   notes text);
     TABLE elements (atomic_number integer primary key,
-                    element text,
-                    molar_mass real,
-                    density real);
+		    element text,
+		    molar_mass real,
+		    density real);
     TABLE xray_levels (id integer primary key,
-                       element text,
-                       iupac_symbol text,
-                       absorption_edge real,
-                       fluorescence_yield real,
-                       jump_ratio real);
+		       element text,
+		       iupac_symbol text,
+		       absorption_edge real,
+		       fluorescence_yield real,
+		       jump_ratio real);
     TABLE xray_transitions (id integer primary key,
-                            element text,
-                            iupac_symbol text,
-                            siegbahn_symbol text,
-                            initial_level text,
-                            final_level text,
-                            emission_energy real,
-                            intensity real);
+			    element text,
+			    iupac_symbol text,
+			    siegbahn_symbol text,
+			    initial_level text,
+			    final_level text,
+			    emission_energy real,
+			    intensity real);
     TABLE photoabsorption (id integer primary key,
-                           element text,
-                           log_energy text,
-                           log_photoabsorption text,
-                           log_photoabsorption_spline text);
+			   element text,
+			   log_energy text,
+			   log_photoabsorption text,
+			   log_photoabsorption_spline text);
     TABLE scattering (id integer primary key,
-                      element text,
-                      log_energy text,
-                      log_coherent_scatter text,
-                      log_coherent_scatter_spline text,
-                      log_incoherent_scatter text,
-                      log_incoherent_scatter_spline text);
+		      element text,
+		      log_energy text,
+		      log_coherent_scatter text,
+		      log_coherent_scatter_spline text,
+		      log_incoherent_scatter text,
+		      log_incoherent_scatter_spline text);
     TABLE Coster_Kronig (id integer primary key,
-                         element text,
-                         initial_level text,
-                         final_level text,
-                         transition_probability real,
-                         total_transition_probability real);
+			 element text,
+			 initial_level text,
+			 final_level text,
+			 transition_probability real,
+			 total_transition_probability real);
     TABLE Waasmaier (id integer primary key,
-                     atomic_number integer,
-                     element text,
-                     ion text,
-                     offset real,
-                     scale text,
-                     exponents text);
+		     atomic_number integer,
+		     element text,
+		     ion text,
+		     offset real,
+		     scale text,
+		     exponents text);
     TABLE KeskiRahkonen_Krause (id integer primary key,
-                                atomic_number integer,
-                                element text,
-                                edge text,
-                                width float);
+				atomic_number integer,
+				element text,
+				edge text,
+				width float);
     TABLE Chantler (id integer primary key,
-                    element text,
-                    sigma_mu real,
-                    mue_f2 real,
-                    density real,
-                    corr_henke float,
-                    corr_cl35 float,
-                    corr_nucl float,
-                    energy text,
-                    f1 text,
-                    f2 text,
-                    mu_photo text,
-                    mu_incoh text,
-                    mu_total text);
+		    element text,
+		    sigma_mu real,
+		    mue_f2 real,
+		    density real,
+		    corr_henke float,
+		    corr_cl35 float,
+		    corr_nucl float,
+		    energy text,
+		    f1 text,
+		    f2 text,
+		    mu_photo text,
+		    mu_incoh text,
+		    mu_total text);
 
 
 More details for each table are given below.
@@ -111,10 +111,10 @@ The `Version` table holds data about the revisions to the database file
 itself.  Each row represents a single revision.
 
 
-.. index:: Table of Database Versions
+.. index:: DB Table of Database Versions
 .. _db_version_table:
 
-   Table of Database Versions
+   DB Table of Database Versions
 
     +----------------------+--------------+---------------------------------------+
     |  Column              |  Type        | Description                           |
@@ -137,10 +137,10 @@ The `elements` table holds basic data about each element.  Each row
 represents an element.
 
 
-.. index:: Table of Basic Properties of the Elements
+.. index:: DB Table of Basic Properties of the Elements
 .. _db_elements_table:
 
-   Table of Basic Properties of the Elements
+   DB Table of Basic Properties of the Elements
 
     +----------------------+--------------+---------------------------------------+
     |  Column              |  Type        | Description                           |
@@ -162,15 +162,15 @@ Xray_Levels Table
 The `xray_levels` table holds data for electronic levels of atoms.  Each row
 represents a core electronic level.
 
-.. index:: Table of X-ray Levels
+.. index:: DB Table of X-ray Levels
 .. _db_xray_levels_table:
 
-   Table of X-ray and core electronic levels.  `fluorescence yield` gives the
-   probability of an empty level refilling by X-ray fluorescence. The `jump
-   ratio` is the ratio of values for photo-electric cross section (that is, from
-   :ref:`db_photoabsorption_sect`) 1 eV above the absorption edge to that 1 eV
-   below the absorption edge.  See :ref:`Table of X-ray Edges
-   <xraydb-edge_table>`
+   DB Table of X-ray and core electronic levels.  `fluorescence yield`
+   gives the probability of an empty level refilling by X-ray
+   fluorescence. The `jump ratio` is the ratio of values for photo-electric
+   cross section (that is, from :ref:`db_photoabsorption_sect`) 1 eV above
+   the absorption edge to that 1 eV below the absorption edge.  See
+   :ref:`Table of X-ray Edges <xraydb-edge_table>`
 
     +----------------------+--------------+---------------------------------------+
     |  Column              |  Type        | Description                           |
@@ -196,10 +196,10 @@ Xray_Transitions Table
 The `xray_transitions` table holds data for transitions between electronic levels
 of atoms.  Each row represents a transition between two levels.
 
-.. index:: Table of X-ray Transitions
+.. index:: DB Table of X-ray Transitions
 .. _db_xray_trans_table:
 
-   Table of X-ray Transitions.  Both IUPAC and Siegbahn symbols are given (see
+   DB Table of X-ray Transitions.  Both IUPAC and Siegbahn symbols are given (see
    :ref:`Table of X-ray emission lines <xraydb-lines_table>`), as
    well as the initial and final levels.  The `intensity` is the relative
    intensity of the transition for a given `initial level`.
@@ -230,12 +230,12 @@ Photoabsorption Table
 ------------------------
 
 The `photoabsorption` table holds data for the photo-electric absorption
-cross sections.  Each row represents an element.
+cross sections in cm^2/gr.  Each row represents an element.
 
-.. index:: Table of Photoabsorption Cross Sections
+.. index:: DB Table of Photoabsorption Cross Sections
 .. _db_photoabsorption_table:
 
-   Table of Photoabsorption Cross Sections.  JSON-encoded arrays are held
+   DB Table of Photoabsorption Cross Sections.  JSON-encoded arrays are held
    for logs of energy, cross section, and cross section spline (second
    derivative useful for spline interpolation).
 
@@ -259,12 +259,12 @@ Scattering Table
 ------------------------
 
 The `scattering` table holds data for the coherent and incoherent X-ray scattering
-cross sections.  Each row represents an element.
+cross sections, in cm^2/gr.  Each row represents an element.
 
-.. index:: Table of Coherent and Incoherent Scattering Cross Sections
+.. index:: DB Table of Coherent and Incoherent Scattering Cross Sections
 .. _db_scattering_table:
 
-   Table of Coherent and Incoherent Scattering Cross Sections.  JSON-encoded
+   DB Table of Coherent and Incoherent Scattering Cross Sections.  JSON-encoded
    arrays are held for logs of energy, cross section, and cross section spline
    (second derivative useful for spline interpolation).
 
@@ -299,10 +299,10 @@ direct transitions, while the total probability includes cascade effects.
 Each row represents a transition.
 
 
-.. index:: Table of Coster-Kronig Transitions
+.. index:: DB Table of Coster-Kronig Transitions
 .. _db_costerkronig_table:
 
-   Table of Coster-Kronig Transitions.
+   DB Table of Coster-Kronig Transitions.
 
     +-------------------------------+--------------+---------------------------------------+
     |  Column                       |  Type        | Description                           |
@@ -325,14 +325,17 @@ Each row represents a transition.
 Waasmaier Table
 ------------------------
 
-The `Waasmaier` table holds data for calculating elastic X-ray scattering cross sections,
-:math:`f_0(q)`, from :cite:ts:`Waasmaier_Kirfel`.  The data are available for many common
-oxidation states for each element.  Each row represents an ion.
+The `Waasmaier` table holds data for calculating elastic X-ray scattering
+factors :math:`f_0(k)`, from :cite:author:`Waasmaier_Kirfel`.  The scattering
+factor is unitless, and :math:`k=\sin(\theta)/\lambda` where :math:`\theta`
+is the scattering angle and :math:`\lambda` is the X-ray wavelength.
+available for many common ionic states for each element.  Each row
+represents an ion.
 
-.. index:: Table of Elastic Scattering Cross Section Coefficients
+.. index:: DB Table of Elastic Scattering Cross Section Coefficients
 .. _db_waasmaier_table:
 
-   Table of Elastic Scattering Cross Section Coefficients
+   DB Table of Elastic Scattering Cross Section Coefficients
 
     +-------------------------------+--------------+---------------------------------------+
     |  Column                       |  Type        | Description                           |
@@ -359,13 +362,13 @@ KeskiRahkonen_Krause Table
 ------------------------------
 
 The `KeskiRahkonen_Krause` table holds data for energy widths of the core electronic
-levels from :cite:ts:`Keski_Krause`.  Values are in eV, and each row represents an
+levels from :cite:author:`Keski_Krause`.  Values are in eV, and each row represents an
 energy level for an element.
 
-.. index:: Table of Core Hole Widths
+.. index:: DB Table of Core Hole Widths
 .. _db_keski_table:
 
-   Table of Core Hole Widths
+   DB Table of Core Hole Widths
 
     +-------------------------------+--------------+---------------------------------------+
     |  Column                       |  Type        | Description                           |
@@ -389,15 +392,16 @@ energy level for an element.
 Chantler Table
 ------------------------------
 
-The `Chantler` table holds data for resonant X-ray scattering factors :math:`f'(E)` and
-:math:`f''(E)` as well as photo-electric absorption, coherent, and incoherent scattering
-factors from :cite:ts:`Chantler`.  Energies are in eV, and each row represents an
-energy level for an element.
+The `Chantler` table holds data for resonant X-ray scattering factors
+:math:`f'(E)` and :math:`f''(E)` as well as photo-electric absorption,
+coherent, and incoherent scattering factors from :cite:author:`Chantler`.  As
+with other tables, scattering factors are unitless, and cross sections are
+in cm^2/gr. Each row represents an element.
 
-.. index:: Table of resonant scattering and mass attenuation coefficients from Chantler
+.. index:: DB Table of resonant scattering and mass attenuation coefficients from Chantler
 .. _db_chantler_table:
 
-   Table of resonant scattering and mass attenuation coefficients from Chantler.
+   DB Table of resonant scattering and mass attenuation coefficients from Chantler.
 
     +-------------------------------+--------------+---------------------------------------+
     |  Column                       |  Type        | Description                           |

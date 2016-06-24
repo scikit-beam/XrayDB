@@ -32,36 +32,35 @@ To use the XrayDB from python, create an instance, and start using it:
     element symbol or atomic number.  Most data extends to Z=98 (Cf), but
     much data for elements with atomic number > 92 (U) may not be
     available, and may not be very reliable when provided.  Except where
-    noted, the data comes :cite:ts:`Elam_etal`.
+    noted, the data comes from :cite:author:`Elam_etal`
 
-     ========================== =============================================================
-      function                    description
-     ========================== =============================================================
-      :meth:`atomic_number`      atomic number from symbol
-      :meth:`atomic_symbol`      atomic symbol from number
-      :meth:`atomic_mass`        atomic mass
-      :meth:`atomic_density`     atomic density (for pure element)
-      :meth:`xray_edge`          xray edge data for a particular element and edge
-      :meth:`xray_line`          xray emission line data for an element and line
-      :meth:`xray_edges`         dictionary of all X-ray edges data for an element
-      :meth:`xray_lines`         dictionary of all X-ray emission line data for an element
-      :meth:`fluo_yield`         fluorescence yield and weighted line energy
-      :meth:`core_width`         core level width for an element and edge (:cite:ts:`Keski_Krause`)
-      :meth:`mu_elam`            absorption cross section
-      :meth:`coherent_xsec`      coherent cross section
-      :meth:`incoherent_xsec`    incoherent cross section
-      :meth:`f0`                 elastic scattering factor (:cite:ts:`Waasmaier_Kirfel`)
-      :meth:`f0_ions`            list of valid "ions" for :meth:`f0`  (:cite:ts:`Waasmaier_Kirfel`)
-      :meth:`chantler_energies`  energies of tabulation for Chantler data (:cite:ts:`Chantler`)
-      :meth:`f1_chantler`        f'  anomalous factor (:cite:ts:`Chantler`)
-      :meth:`f2_chantler`        f'' anomalous factor (:cite:ts:`Chantler`)
-      :meth:`mu_chantler`        absorption cross section (:cite:ts:`Chantler`)
-     ========================== =============================================================
+     ===================================== =======================================================================
+      XrayDB method                              description
+     ===================================== =======================================================================
+      :meth:`XrayDB.atomic_number`           atomic number from symbol
+      :meth:`XrayDB.atomic_number`           atomic number from symbol
+      :meth:`XrayDB.symbol`                  atomic symbol from number
+      :meth:`XrayDB.molar_mass`              atomic mass
+      :meth:`XrayDB.density`                 density of pure element
+      :meth:`XrayDB.xray_edge`               xray edge data for a particular element and edge
+      :meth:`XrayDB.xray_edges`              dictionary of all X-ray edges data for an element
+      :meth:`XrayDB.xray_lines`              dictionary of all X-ray emission line data for an element
+      :meth:`XrayDB.xray_line_strengths`     absolute line strength in cm^2/gr for all available lines
+      :meth:`XrayDB.mu_elam`                 absorption cross sectionm photo-electric or total
+      :meth:`XrayDB.cross_section_elam`      photo-electric, coherent, or incoherent cross sections.
+      :meth:`XrayDB.corehole_width`          core level width for an element and edge (:cite:author:`Keski_Krause:`)
+      :meth:`XrayDB.f0`                      elastic scattering factor (:cite:author:`Waasmaier_Kirfel`)
+      :meth:`XrayDB.f0_ions`                 list of valid "ions" for :meth:`f0`  (:cite:author:`Waasmaier_Kirfel`)
+      :meth:`XrayDB.chantler_energies`       energies of tabulation for Chantler data (:cite:author:`Chantler`)
+      :meth:`XrayDB.f1_chantler`             :math:`f'(E)` anomalous scattering factor (:cite:author:`Chantler`)
+      :meth:`XrayDB.f2_chantler`             :math:`f"(E)` anomalous scattering factor (:cite:author:`Chantler`)
+      :meth:`XrayDB.mu_chantler`             absorption cross section (:cite:author:`Chantler`)
+     ===================================== =======================================================================
 
 
 .. autoclass:: XrayDB
 
-    .. automethod:: zofsym
+    .. automethod:: atomic_number
 
     .. automethod:: symbol
 
@@ -77,21 +76,13 @@ To use the XrayDB from python, create an instance, and start using it:
 
     .. automethod:: xray_line_strengths
 
-    .. automethod:: CK_probability
+    .. automethod:: ck_probability
 
     .. automethod:: corehole_width
 
-    .. automethod:: Elam_CrossSection
+    .. automethod:: cross_section_elam
 
     .. automethod:: mu_elam
-
-    .. automethod:: coherent_cross_section_elam
-
-    .. automethod:: incoherent_cross_section_elam
-
-    .. automethod:: f0_ions
-
-    .. automethod:: f0
 
     .. automethod:: chantler_energies
 
@@ -100,3 +91,7 @@ To use the XrayDB from python, create an instance, and start using it:
     .. automethod:: f2_chantler
 
     .. automethod:: mu_chantler
+
+    .. automethod:: f0_ions
+
+    .. automethod:: f0
