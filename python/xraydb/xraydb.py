@@ -19,6 +19,7 @@ from sqlalchemy.pool import SingletonThreadPool
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
+import six
 
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
@@ -71,7 +72,7 @@ def isxrayDB(dbname):
 
 def json_encode(val):
     "return json encoded value"
-    if val is None or isinstance(val, (str, unicode)):
+    if val is None or isinstance(val, six.string_types):
         return val
     return  json.dumps(val)
 
