@@ -228,6 +228,8 @@ class XrayDB(object):
         mapper(PhotoAbsorptionTable,     tables['photoabsorption'])
         mapper(ScatteringTable,          tables['scattering'])
 
+        self.atomic_symbols = [e.element for e in self.tables['elements'].select().execute().fetchall()]
+
 
     def close(self):
         "close session"
@@ -474,7 +476,8 @@ class XrayDB(object):
     def _elem_data(self, element):
         "return data from elements table: internal use"
         elem = ElementsTable.element
-        if isinstance(element, int):
+        if not element in self.atomic_symbols:
+            element = int(element)
             elem = ElementsTable.atomic_number
         row = self.query(ElementsTable).filter(elem==element).all()
         if len(row) > 0:
