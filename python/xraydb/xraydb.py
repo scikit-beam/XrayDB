@@ -19,6 +19,7 @@ from sqlalchemy.pool import SingletonThreadPool
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
+import six
 
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
@@ -71,7 +72,7 @@ def isxrayDB(dbname):
 
 def json_encode(val):
     "return json encoded value"
-    if val is None or isinstance(val, (str, unicode)):
+    if val is None or isinstance(val, six.string_types):
         return val
     return  json.dumps(val)
 
@@ -227,6 +228,8 @@ class XrayDB(object):
         mapper(CosterKronigTable,        tables['Coster_Kronig'])
         mapper(PhotoAbsorptionTable,     tables['photoabsorption'])
         mapper(ScatteringTable,          tables['scattering'])
+
+        self.atomic_symbols = [e.element for e in self.tables['elements'].select().execute().fetchall()]
 
 
     def close(self):
@@ -474,7 +477,8 @@ class XrayDB(object):
     def _elem_data(self, element):
         "return data from elements table: internal use"
         elem = ElementsTable.element
-        if isinstance(element, int):
+        if not element in self.atomic_symbols:
+            element = int(element)
             elem = ElementsTable.atomic_number
         row = self.query(ElementsTable).filter(elem==element).all()
         if len(row) > 0:
