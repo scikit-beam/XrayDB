@@ -14,7 +14,7 @@ from string import maketrans
 from collections import namedtuple
 
 
-def add_Version(dest, tag, notes='', append=True):
+def add_Version(dest, append=True):
     """add Version Information"""
     if os.path.exists(dest) and not append:
         raise IOError('File "%s" already exists -- cannot add Version')
@@ -28,29 +28,16 @@ def add_Version(dest, tag, notes='', append=True):
     if os.path.exists(source):
         with io.open(source, mode='r', encoding='ascii') as f:
             version_lines = f.readlines()
-    rows = []
+    rowid = 0
     for line in version_lines:
         if not line.startswith('#') and len(line)> 3:
-            _tag, _date, _notes = [l.strip() for l in line.split('&&', 2)]
-            rows.append((_tag, _date, _notes))
+            _tag, _date, _notes = [l.strip() for l in line.split('//', 2)]
+            rowid += 1
+            c.execute('insert into Version values (?,?,?,?)',
+                      (rowid, _tag, _date, _notes))
 
-    rows.append((tag, time.strftime("%Y-%m-%d %H:%M:%S"), notes))
-
-    buff = ['# Version information for SQLite3 XrayDB',
-            '# Tag    &&   Date   &&  Notes']
-    rowid = 0
-    for tag, dstring, notes in rows:
-        buff.append(" && ".join([tag, dstring, notes]))
-        rowid += 1
-        c.execute('insert into Version values (?,?,?,?)',
-                  (rowid, tag, dstring, notes))
-    buff.append('')
     conn.commit()
     c.close()
-
-    f = open(source, 'w')
-    f.write("\n".join(buff))
-    f.close()
 
 
 def add_KeskiRahkonen_Krause(dest, append=True):
@@ -830,4 +817,4 @@ if __name__ == '__main__':
     add_KeskiRahkonen_Krause(dest, append=True)
     add_Chantler(dest, table='Chantler_coarse', subdir='coarse', append=True)
     add_Chantler(dest, table='Chantler',        subdir='fine',   append=True)
-    add_Version(dest, '2.0', notes='Chantler data on finer energy grid', append=True)
+    add_Version(dest)
