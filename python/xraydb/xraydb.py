@@ -339,7 +339,7 @@ class XrayDB(object):
                 f0 += s * np.exp(-e*q*q)
             return f0
 
-    def _from_chantler(self, element, energy, column='f1', smoothing=1):
+    def _from_chantler(self, element, energy, column='f1', smoothing=0):
         """
         return energy-dependent data from Chantler table
 
