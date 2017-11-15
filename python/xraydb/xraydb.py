@@ -9,17 +9,17 @@ Main Class for full Database:  xrayDB
 import os
 import time
 import json
+import six
 from collections import namedtuple
 import numpy as np
 from scipy.interpolate import interp1d, splrep, UnivariateSpline
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers
+from sqlalchemy.orm import sessionmaker, mapper, clear_mappers
 from sqlalchemy.pool import SingletonThreadPool
 
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
-import six
 
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
@@ -229,10 +229,8 @@ class XrayDB(object):
         self.metadata =  MetaData(self.engine)
         self.metadata.reflect()
         tables = self.tables = self.metadata.tables
-        try:
-            clear_mappers()
-        except:
-            pass
+
+        clear_mappers()
         mapper(ChantlerTable,            tables['Chantler'])
         mapper(WaasmaierTable,           tables['Waasmaier'])
         mapper(KeskiRahkonenKrauseTable, tables['KeskiRahkonen_Krause'])
@@ -245,7 +243,8 @@ class XrayDB(object):
         mapper(PhotoAbsorptionTable,     tables['photoabsorption'])
         mapper(ScatteringTable,          tables['scattering'])
 
-        self.atomic_symbols = [e.element for e in self.tables['elements'].select().execute().fetchall()]
+        self.atomic_symbols = [e.element for e in self.tables['elements'].select(
+            ).execute().fetchall()]
 
 
     def close(self):
@@ -336,6 +335,9 @@ class XrayDB(object):
         Notes:
             q = sin(theta) / lambda, where theta = incident angle,
             and lambda = X-ray wavelength
+
+            Z values from 1 to 98 (and symbols 'H' to 'Cf') are supported.
+            The list of ionic symbols can be read with the function .f0_ions()
 
         References:
             Waasmaier and Kirfel
@@ -718,7 +720,7 @@ class XrayDB(object):
 
         Parameters:
             element (string, integer): atomic number or symbol for element
-            edge (string): edge for hole.
+            edge (string): edge for hole
             use_keski (bool) : force use of KeskiRahkonen and Krause table for all data.
 
         Returns:
@@ -816,4 +818,40 @@ class XrayDB(object):
         if kind.lower().startswith('tot'):
             xsec += calc(element, energies, kind='coh')
             xsec += calc(element, energies, kind='incoh')
+        elif kind.lower().startswith('coh'):
+            xsec = calc(element, energies, kind='coh')
+        elif kind.lower().startswith('incoh'):
+            xsec = calc(element, energies, kind='incoh')
+        else:
+            xsec = calc(element, energies, kind='photo')
         return xsec
+
+    def coherent_cross_section_elam(self, element, energies):
+        """returns coherenet scattering cross section for an element
+        at energies (in eV)
+
+        returns values in units of cm^2 / gr
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energies: energies in eV to calculate cross-sections
+
+        Data from Elam, Ravel, and Sieber.
+        """
+        return self.Elam_CrossSection(element, energies, kind='coh')
+
+    def incoherent_cross_section_elam(self, element, energies):
+        """returns incoherenet scattering cross section for an element
+        at energies (in eV)
+
+        returns values in units of cm^2 / gr
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energies: energies in eV to calculate cross-sections
+
+        Data from Elam, Ravel, and Sieber.
+        """
+        return self.Elam_CrossSection(element, energies, kind='incoh')
