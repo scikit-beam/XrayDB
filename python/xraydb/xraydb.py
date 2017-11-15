@@ -27,7 +27,7 @@ XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
 ElementData = namedtuple('ElementData', ('Z', 'symbol', 'mass', 'density'))
 
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 
 def as_ndarray(obj):
@@ -170,6 +170,20 @@ class KeskiRahkonenKrauseTable(_BaseTable):
         edge = getattr(self, 'edge', '??')
         return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
 
+class KrauseOliverTable(_BaseTable):
+    (id, atomic_number, element, edge, width) = [None]*5
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge = getattr(self, 'edge', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
+class CoreWidthsTable(_BaseTable):
+    (id, atomic_number, element, edge, width) = [None]*5
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge = getattr(self, 'edge', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
 class ChantlerTable(_BaseTable):
     (id, element, sigma_mu, mue_f2, density,
      corr_henke, corr_cl35, corr_nucl,
@@ -222,6 +236,8 @@ class XrayDB(object):
         mapper(ChantlerTable,            tables['Chantler'])
         mapper(WaasmaierTable,           tables['Waasmaier'])
         mapper(KeskiRahkonenKrauseTable, tables['KeskiRahkonen_Krause'])
+        mapper(KrauseOliverTable,        tables['Krause_Oliver'])
+        mapper(CoreWidthsTable,          tables['corelevel_widths'])
         mapper(ElementsTable,            tables['elements'])
         mapper(XrayLevelsTable,          tables['xray_levels'])
         mapper(XrayTransitionsTable,     tables['xray_transitions'])
@@ -696,21 +712,34 @@ class XrayDB(object):
             else:
                 return row.transition_probability
 
-    def corehole_width(self, element, edge):
+    def corehole_width(self, element, edge, use_keski=False):
         """
         returns core hole width for an element and edge
 
         Parameters:
             element (string, integer): atomic number or symbol for element
             edge (string): edge for hole.
+            use_keski (bool) : force use of KeskiRahkonen and Krause table for all data.
 
         Returns:
             float: corehole width in eV.
 
+        Notes:
+            Uses Krause and Oliver where data is available (K, L lines Z > 10)
+            Uses Keski-Rahkonen and Krause otherwise
+
         References:
-            Keski-Rahkonen and Krause
+            Krause and Oliver, 1979
+            Keski-Rahkonen and Krause, 1974
+
         """
+        version_qy = self.tables['Version'].select().order_by('date')
+        version_id = version_qy.execute().fetchall()[-1].id
+
         tab = KeskiRahkonenKrauseTable
+        if not use_keski and version_id > 3:
+            tab = CoreWidthsTable
+
         rows = self.query(tab).filter(tab.element==self.symbol(element))
         row = rows.filter(tab.edge==edge.title()).all()[0]
         return row.width
