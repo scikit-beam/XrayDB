@@ -24,7 +24,7 @@ import sqlalchemy.dialects.sqlite
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
                            'final_level'))
-ElementData = namedtuple('ElementData', ('Z', 'symbol', 'mass', 'density'))
+ElementData = namedtuple('ElementData', ('atomic_number', 'symbol', 'mass', 'density'))
 
 
 __version__ = '1.3'
@@ -494,10 +494,14 @@ class XrayDB(object):
 
     def _elem_data(self, element):
         "return data from elements table: internal use"
-        elem = ElementsTable.element
-        if not element in self.atomic_symbols:
-            element = int(element)
+        if isinstance(element, int):
             elem = ElementsTable.atomic_number
+        else:
+            elem = ElementsTable.element
+            element = element.title()
+            if not element in self.atomic_symbols:
+                raise ValueError("unknown element '%s'" % repr(element))
+
         row = self.query(ElementsTable).filter(elem==element).all()
         if len(row) > 0:
             row = row[0]
@@ -515,7 +519,7 @@ class XrayDB(object):
         Returns:
             integer: atomic number
         """
-        return self._elem_data(element).Z
+        return self._elem_data(element).atomic_number
 
     def symbol(self, element):
         """
@@ -694,7 +698,7 @@ class XrayDB(object):
 
         Example:
             >>> xdb = XrayDB()
-            >>> xdb.CK_probability('Cu', 'L1', 'L3', total=True)
+            >>> xdb.ck_probability('Cu', 'L1', 'L3', total=True)
             0.681
 
         References:
@@ -714,13 +718,13 @@ class XrayDB(object):
             else:
                 return row.transition_probability
 
-    def corehole_width(self, element, edge, use_keski=False):
+    def corehole_width(self, element, edge=None, use_keski=False):
         """
         returns core hole width for an element and edge
 
         Parameters:
             element (string, integer): atomic number or symbol for element
-            edge (string): edge for hole
+            edge (string or None): edge for hole, return all if None
             use_keski (bool) : force use of KeskiRahkonen and Krause table for all data.
 
         Returns:
@@ -743,8 +747,15 @@ class XrayDB(object):
             tab = CoreWidthsTable
 
         rows = self.query(tab).filter(tab.element==self.symbol(element))
-        row = rows.filter(tab.edge==edge.title()).all()[0]
-        return row.width
+        if edge is not None:
+            rows = rows.filter(tab.edge==edge.title())
+        result = rows.all()
+        if len(result) == 1:
+            result = result[0].width
+        else:
+            result = [(r.edge, r.width) for r in result]
+        return result
+
 
     def cross_section_elam(self, element, energies, kind='photo'):
         """
