@@ -494,13 +494,14 @@ class XrayDB(object):
 
     def _elem_data(self, element):
         "return data from elements table: internal use"
-        if isinstance(element, int):
-            elem = ElementsTable.atomic_number
-        else:
+        if isinstance(element, six.string_types):
             elem = ElementsTable.element
             element = element.title()
             if not element in self.atomic_symbols:
                 raise ValueError("unknown element '%s'" % repr(element))
+        else:
+            element = int(element)
+            elem = ElementsTable.atomic_number
 
         row = self.query(ElementsTable).filter(elem==element).all()
         if len(row) > 0:
