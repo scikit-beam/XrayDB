@@ -9,25 +9,25 @@ Main Class for full Database:  xrayDB
 import os
 import time
 import json
+import six
 from collections import namedtuple
 import numpy as np
 from scipy.interpolate import interp1d, splrep, UnivariateSpline
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy.orm import sessionmaker,  mapper, clear_mappers
+from sqlalchemy.orm import sessionmaker, mapper, clear_mappers
 from sqlalchemy.pool import SingletonThreadPool
 
 # needed for py2exe?
 import sqlalchemy.dialects.sqlite
 
-import six
 
 XrayEdge = namedtuple('XrayEdge', ('edge', 'fyield', 'jump_ratio'))
 XrayLine = namedtuple('XrayLine', ('energy', 'intensity', 'initial_level',
                            'final_level'))
-ElementData = namedtuple('ElementData', ('Z', 'symbol', 'mass', 'density'))
+ElementData = namedtuple('ElementData', ('atomic_number', 'symbol', 'mass', 'density'))
 
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 
 def as_ndarray(obj):
@@ -170,6 +170,20 @@ class KeskiRahkonenKrauseTable(_BaseTable):
         edge = getattr(self, 'edge', '??')
         return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
 
+class KrauseOliverTable(_BaseTable):
+    (id, atomic_number, element, edge, width) = [None]*5
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge = getattr(self, 'edge', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
+class CoreWidthsTable(_BaseTable):
+    (id, atomic_number, element, edge, width) = [None]*5
+    def __repr__(self):
+        el = getattr(self, 'element', '??')
+        edge = getattr(self, 'edge', '??')
+        return "<%s(%s %s)>" % (self.__class__.__name__, el, edge)
+
 class ChantlerTable(_BaseTable):
     (id, element, sigma_mu, mue_f2, density,
      corr_henke, corr_cl35, corr_nucl,
@@ -215,13 +229,13 @@ class XrayDB(object):
         self.metadata =  MetaData(self.engine)
         self.metadata.reflect()
         tables = self.tables = self.metadata.tables
-        try:
-            clear_mappers()
-        except:
-            pass
+
+        clear_mappers()
         mapper(ChantlerTable,            tables['Chantler'])
         mapper(WaasmaierTable,           tables['Waasmaier'])
         mapper(KeskiRahkonenKrauseTable, tables['KeskiRahkonen_Krause'])
+        mapper(KrauseOliverTable,        tables['Krause_Oliver'])
+        mapper(CoreWidthsTable,          tables['corelevel_widths'])
         mapper(ElementsTable,            tables['elements'])
         mapper(XrayLevelsTable,          tables['xray_levels'])
         mapper(XrayTransitionsTable,     tables['xray_transitions'])
@@ -229,7 +243,8 @@ class XrayDB(object):
         mapper(PhotoAbsorptionTable,     tables['photoabsorption'])
         mapper(ScatteringTable,          tables['scattering'])
 
-        self.atomic_symbols = [e.element for e in self.tables['elements'].select().execute().fetchall()]
+        self.atomic_symbols = [e.element for e in self.tables['elements'].select(
+            ).execute().fetchall()]
 
 
     def close(self):
@@ -320,6 +335,9 @@ class XrayDB(object):
         Notes:
             q = sin(theta) / lambda, where theta = incident angle,
             and lambda = X-ray wavelength
+
+            Z values from 1 to 98 (and symbols 'H' to 'Cf') are supported.
+            The list of ionic symbols can be read with the function .f0_ions()
 
         References:
             Waasmaier and Kirfel
@@ -476,10 +494,14 @@ class XrayDB(object):
 
     def _elem_data(self, element):
         "return data from elements table: internal use"
-        elem = ElementsTable.element
-        if not element in self.atomic_symbols:
-            element = int(element)
+        if isinstance(element, int):
             elem = ElementsTable.atomic_number
+        else:
+            elem = ElementsTable.element
+            element = element.title()
+            if not element in self.atomic_symbols:
+                raise ValueError("unknown element '%s'" % repr(element))
+
         row = self.query(ElementsTable).filter(elem==element).all()
         if len(row) > 0:
             row = row[0]
@@ -497,7 +519,7 @@ class XrayDB(object):
         Returns:
             integer: atomic number
         """
-        return self._elem_data(element).Z
+        return self._elem_data(element).atomic_number
 
     def symbol(self, element):
         """
@@ -676,7 +698,7 @@ class XrayDB(object):
 
         Example:
             >>> xdb = XrayDB()
-            >>> xdb.CK_probability('Cu', 'L1', 'L3', total=True)
+            >>> xdb.ck_probability('Cu', 'L1', 'L3', total=True)
             0.681
 
         References:
@@ -696,24 +718,44 @@ class XrayDB(object):
             else:
                 return row.transition_probability
 
-    def corehole_width(self, element, edge):
+    def corehole_width(self, element, edge=None, use_keski=False):
         """
         returns core hole width for an element and edge
 
         Parameters:
             element (string, integer): atomic number or symbol for element
-            edge (string): edge for hole.
+            edge (string or None): edge for hole, return all if None
+            use_keski (bool) : force use of KeskiRahkonen and Krause table for all data.
 
         Returns:
             float: corehole width in eV.
 
+        Notes:
+            Uses Krause and Oliver where data is available (K, L lines Z > 10)
+            Uses Keski-Rahkonen and Krause otherwise
+
         References:
-            Keski-Rahkonen and Krause
+            Krause and Oliver, 1979
+            Keski-Rahkonen and Krause, 1974
+
         """
+        version_qy = self.tables['Version'].select().order_by('date')
+        version_id = version_qy.execute().fetchall()[-1].id
+
         tab = KeskiRahkonenKrauseTable
+        if not use_keski and version_id > 3:
+            tab = CoreWidthsTable
+
         rows = self.query(tab).filter(tab.element==self.symbol(element))
-        row = rows.filter(tab.edge==edge.title()).all()[0]
-        return row.width
+        if edge is not None:
+            rows = rows.filter(tab.edge==edge.title())
+        result = rows.all()
+        if len(result) == 1:
+            result = result[0].width
+        else:
+            result = [(r.edge, r.width) for r in result]
+        return result
+
 
     def cross_section_elam(self, element, energies, kind='photo'):
         """
@@ -787,4 +829,40 @@ class XrayDB(object):
         if kind.lower().startswith('tot'):
             xsec += calc(element, energies, kind='coh')
             xsec += calc(element, energies, kind='incoh')
+        elif kind.lower().startswith('coh'):
+            xsec = calc(element, energies, kind='coh')
+        elif kind.lower().startswith('incoh'):
+            xsec = calc(element, energies, kind='incoh')
+        else:
+            xsec = calc(element, energies, kind='photo')
         return xsec
+
+    def coherent_cross_section_elam(self, element, energies):
+        """returns coherenet scattering cross section for an element
+        at energies (in eV)
+
+        returns values in units of cm^2 / gr
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energies: energies in eV to calculate cross-sections
+
+        Data from Elam, Ravel, and Sieber.
+        """
+        return self.Elam_CrossSection(element, energies, kind='coh')
+
+    def incoherent_cross_section_elam(self, element, energies):
+        """returns incoherenet scattering cross section for an element
+        at energies (in eV)
+
+        returns values in units of cm^2 / gr
+
+        arguments
+        ---------
+        element:  atomic number, atomic symbol for element
+        energies: energies in eV to calculate cross-sections
+
+        Data from Elam, Ravel, and Sieber.
+        """
+        return self.Elam_CrossSection(element, energies, kind='incoh')
